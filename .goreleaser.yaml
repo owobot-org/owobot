@@ -1,0 +1,72 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: owobot
+    env:
+      - CGO_ENABLED=0
+    binary: owobot
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - 386
+      - arm64
+      - arm
+      - riscv64
+archives:
+  - files:
+      - scripts/completion/*
+nfpms:
+  - id: owobot
+    description: "The coolest bot ever written"
+    homepage: 'https://gitea.elara.ws/owobot/owobot'
+    maintainer: 'Elara Musayelyan <elara@elara.ws>'
+    license: AGPLv3
+    formats:
+      - deb
+      - rpm
+      - archlinux
+    provides:
+      - owobot
+    conflicts:
+      - owobot
+    contents:
+      - src: scripts/completion/bash
+        dst: /usr/share/bash-completion/completions/lure
+aurs:
+  - name: owobot-bin
+    homepage: 'https://gitea.elara.ws/owobot/owobot'
+    description: "The coolest bot ever written"
+    maintainers:
+      - 'Elara Musayelyan <elara@elara.ws>'
+    license: GPLv3
+    private_key: '{{ .Env.AUR_KEY }}'
+    git_url: 'ssh://aur@aur.archlinux.org/owobot-bin.git'
+    provides:
+      - owobot
+    conflicts:
+      - owobot
+    package: |-
+      # binaries
+      install -Dm755 ./owobot "${pkgdir}/usr/bin/owobot"
+
+      # services
+      # TODO
+release:
+  gitea:
+    owner: owobot
+    name: owobot
+announce:
+  discord: 
+    enabled: true
+gitea_urls:
+  api: 'https://gitea.elara.ws/api/v1/'
+  download: 'https://gitea.elara.ws'
+  skip_tls_verify: false
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
