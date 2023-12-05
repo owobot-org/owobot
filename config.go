@@ -41,14 +41,14 @@ func loadConfig() (*Config, error) {
 	cfg := &Config{}
 
 	fl, err := os.Open("/etc/owobot.toml")
-	if err != nil {
-		return nil, err
+	if err == nil {
+		err = toml.NewDecoder(fl).Decode(cfg)
+		if err != nil {
+			return nil, err
+		}
+		fl.Close()
 	}
-	defer fl.Close()
-	err = toml.NewDecoder(fl).Decode(cfg)
-	if err != nil {
-		return nil, err
-	}
+	
 
 	return cfg, env.ParseWithOptions(cfg, env.Options{Prefix: "OWOBOT_"})
 }
