@@ -40,7 +40,7 @@ aurs:
     description: "The coolest bot ever written"
     maintainers:
       - 'Elara Musayelyan <elara@elara.ws>'
-    license: GPLv3
+    license: AGPLv3
     private_key: '{{ .Env.AUR_KEY }}'
     git_url: 'ssh://aur@aur.archlinux.org/owobot-bin.git'
     provides:
