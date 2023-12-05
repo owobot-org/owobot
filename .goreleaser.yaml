@@ -19,7 +19,7 @@ archives:
       - owobot.service
 nfpms:
   - id: owobot
-    description: "The coolest bot ever written"
+    description: "Your server's guardian and entertainer"
     homepage: 'https://gitea.elara.ws/owobot/owobot'
     maintainer: 'Elara Musayelyan <elara@elara.ws>'
     license: AGPLv3
@@ -37,7 +37,7 @@ nfpms:
 aurs:
   - name: owobot-bin
     homepage: 'https://gitea.elara.ws/owobot/owobot'
-    description: "The coolest bot ever written"
+    description: "Your server's guardian and entertainer"
     maintainers:
       - 'Elara Musayelyan <elara@elara.ws>'
     license: AGPLv3
