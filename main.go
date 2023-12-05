@@ -28,6 +28,7 @@ import (
 	"go.elara.ws/logger"
 	"go.elara.ws/logger/log"
 	"go.elara.ws/owobot/internal/db"
+	"go.elara.ws/owobot/internal/systems/about"
 	"go.elara.ws/owobot/internal/systems/commands"
 	"go.elara.ws/owobot/internal/systems/eventlog"
 	"go.elara.ws/owobot/internal/systems/guilds"
@@ -94,6 +95,7 @@ func main() {
 		vetting.Init,
 		reactions.Init,
 		roles.Init,
+		about.Init,
 		commands.Init, // The commands system should always go last
 	)
 
