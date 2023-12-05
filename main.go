@@ -49,9 +49,9 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	cfg, err := loadEnv()
+	cfg, err := loadConfig()
 	if err != nil {
-		log.Fatal("Error loading environment variables").Err(err).Send()
+		log.Fatal("Error loading configuration").Err(err).Send()
 	}
 
 	err = db.Init(ctx, cfg.DBPath+"?_pragma=busy_timeout(30000)")

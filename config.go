@@ -19,22 +19,36 @@
 package main
 
 import (
+	"os"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/caarlos0/env/v10"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type Config struct {
-	Token    string   `env:"TOKEN,notEmpty"`
-	DBPath   string   `env:"DB_PATH" envDefault:"owobot.db"`
-	Activity Activity `envPrefix:"ACTIVITY_"`
+	Token    string   `env:"TOKEN,notEmpty" toml:"token"`
+	DBPath   string   `env:"DB_PATH" envDefault:"owobot.db" toml:"db_path"`
+	Activity Activity `envPrefix:"ACTIVITY_" toml:"activity"`
 }
 
 type Activity struct {
-	Type discordgo.ActivityType `env:"TYPE" envDefault:"-1"`
-	Name string                 `env:"NAME" envDefault:""`
+	Type discordgo.ActivityType `env:"TYPE" envDefault:"-1" toml:"type"`
+	Name string                 `env:"NAME" envDefault:"" toml:"name"`
 }
 
-func loadEnv() (*Config, error) {
+func loadConfig() (*Config, error) {
 	cfg := &Config{}
+
+	fl, err := os.Open("/etc/owobot.toml")
+	if err != nil {
+		return nil, err
+	}
+	defer fl.Close()
+	err = toml.NewDecoder(fl).Decode(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	return cfg, env.ParseWithOptions(cfg, env.Options{Prefix: "OWOBOT_"})
 }
