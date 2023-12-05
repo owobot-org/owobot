@@ -1,5 +1,8 @@
 # owobot - The coolest bot ever written
 
+[![owobot-bin AUR package](https://img.shields.io/aur/version/owobot-bin?label=owobot-bin&logo=archlinux)](https://aur.archlinux.org/packages/owobot-bin/)
+[![OCI Image Badge](https://img.shields.io/badge/oci-images-24184C?logo=opencontainersinitiative)](https://gitea.elara.ws/owobot/-/packages/container/owobot/latest)
+
 ## Introduction
 
 owobot is a powerful Discord bot designed to handle a wide range of tasks in your server, from moderation to entertainment. It takes advantage of several cutting-edge discord features, such as message buttons and modals.
