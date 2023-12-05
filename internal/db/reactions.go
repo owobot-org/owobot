@@ -48,7 +48,7 @@ func AddReaction(guildID string, r Reaction) error {
 }
 
 func DeleteReaction(guildID string, match string) error {
-	_, err := db.Exec("DELETE FROM reactions WHERE guild_id = ? AND match = ? LIMIT 1", guildID, match)
+	_, err := db.Exec("DELETE FROM reactions WHERE guild_id = ? AND match = ?", guildID, match)
 	return err
 }
 
