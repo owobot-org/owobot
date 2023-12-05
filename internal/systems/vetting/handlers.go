@@ -1,5 +1,5 @@
 /*
- * owobot - The coolest Discord bot ever written
+ * owobot - Your server's guardian and entertainer
  * Copyright (C) 2023 owobot Contributors
  *
  * This program is free software: you can redistribute it and/or modify
