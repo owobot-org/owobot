@@ -5,7 +5,8 @@
 <p align = "center">
   <a href="https://aur.archlinux.org/packages/owobot-bin/"><img alt="owobot-bin AUR package" src="https://img.shields.io/aur/version/owobot-bin?label=owobot-bin&logo=archlinux&style=for-the-badge"></a>&nbsp;
   <a href="https://gitea.elara.ws/owobot/owobot/releases/latest"><img alt="Gitea Releases Badge" src="https://img.shields.io/badge/gitea-release-609926?logo=gitea&style=for-the-badge"></a>&nbsp;
-  <a href="https://gitea.elara.ws/owobot/-/packages/container/owobot/latest"><img alt="OCI Image Badge" src="https://img.shields.io/badge/oci-images-24184C?logo=opencontainersinitiative&style=for-the-badge"></a>
+  <a href="https://gitea.elara.ws/owobot/-/packages/container/owobot/latest"><img alt="OCI Image Badge" src="https://img.shields.io/badge/oci-images-24184C?logo=opencontainersinitiative&style=for-the-badge"></a>&nbsp;
+  <a href="https://discord.gg/5B2wVS7gnY"><img alt="Discord badge" src="https://img.shields.io/discord/1180630319402057758?style=for-the-badge&logo=discord&color=5865F2"></a>
 </p>
 
 ## Introduction
