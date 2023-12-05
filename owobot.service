@@ -1,0 +1,11 @@
+[Unit]
+Description=owobot
+After=network-online.target
+
+[Service]
+ExecStart=owobot
+Restart=always
+StandardOutput=journal
+
+[Install]
+WantedBy=default.target

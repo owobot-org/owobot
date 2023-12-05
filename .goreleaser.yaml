@@ -16,7 +16,7 @@ builds:
       - riscv64
 archives:
   - files:
-      - scripts/completion/*
+      - owobot.service
 nfpms:
   - id: owobot
     description: "The coolest bot ever written"
@@ -32,8 +32,8 @@ nfpms:
     conflicts:
       - owobot
     contents:
-      - src: scripts/completion/bash
-        dst: /usr/share/bash-completion/completions/lure
+      - src: owobot.service
+        dst: /etc/systemd/system/owobot.service
 aurs:
   - name: owobot-bin
     homepage: 'https://gitea.elara.ws/owobot/owobot'
@@ -52,7 +52,7 @@ aurs:
       install -Dm755 ./owobot "${pkgdir}/usr/bin/owobot"
 
       # services
-      # TODO
+      install -Dm644 ./owobot.service "${pkgdir}/etc/systemd/system/owobot.service"
 release:
   gitea:
     owner: owobot
