@@ -25,7 +25,6 @@ import (
 	"net/url"
 	"path"
 	"strings"
-	"time"
 
 	"mvdan.cc/xurls"
 
@@ -33,6 +32,7 @@ import (
 	"go.elara.ws/logger/log"
 	"go.elara.ws/owobot/internal/db"
 	"go.elara.ws/owobot/internal/systems/commands"
+	"go.elara.ws/owobot/internal/systems/eventlog"
 	"go.elara.ws/owobot/internal/util"
 )
 
@@ -200,10 +200,9 @@ func onReaction(s *discordgo.Session, mra *discordgo.MessageReactionAdd) {
 				msg.ID,
 			),
 			Color: embedColor,
-			Footer: &discordgo.MessageEmbedFooter{
-				Text: util.FormatJucheTime(time.Now()),
-			},
 		}
+
+		eventlog.AddTimeToEmbed(guild.TimeFormat, embed)
 
 		if imageURL := getImageURL(msg); imageURL != "" {
 			// If the message has an image, add it to the embed

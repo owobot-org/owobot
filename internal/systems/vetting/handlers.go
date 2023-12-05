@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"go.elara.ws/logger/log"
@@ -151,18 +150,19 @@ func onVettingRequest(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		return errors.New("you do not have the vetting role")
 	}
 
-	_, err = s.ChannelMessageSendComplex(guild.VettingReqChanID, &discordgo.MessageSend{
-		Embed: &discordgo.MessageEmbed{
-			Title: "Vetting Request",
-			Author: &discordgo.MessageEmbedAuthor{
-				Name:    i.Member.User.Username,
-				IconURL: i.Member.User.AvatarURL(""),
-			},
-			Description: "Accept the vetting request to create a ticket, or reject it to kick the user.",
-			Footer: &discordgo.MessageEmbedFooter{
-				Text: util.FormatJucheTime(time.Now()),
-			},
+	embed := &discordgo.MessageEmbed{
+		Title: "Vetting Request",
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    i.Member.User.Username,
+			IconURL: i.Member.User.AvatarURL(""),
 		},
+		Description: "Accept the vetting request to create a ticket, or reject it to kick the user.",
+	}
+
+	eventlog.AddTimeToEmbed(guild.TimeFormat, embed)
+
+	_, err = s.ChannelMessageSendComplex(guild.VettingReqChanID, &discordgo.MessageSend{
+		Embeds: []*discordgo.MessageEmbed{embed},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 				discordgo.Button{
@@ -270,6 +270,11 @@ func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) err
 		return nil
 	}
 
+	guild, err := db.GuildByID(i.GuildID)
+	if err != nil {
+		return err
+	}
+
 	executor := i.Member
 	member, err := cache.Member(s, i.GuildID, userID)
 	if err != nil {
@@ -283,22 +288,21 @@ func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) err
 			return err
 		}
 
+		embed := &discordgo.MessageEmbed{
+			Title:       "Vetting Request Accepted!",
+			Description: fmt.Sprintf("This vetting request has been accepted and a vetting ticket has been created at <#%s>.\n\n**Accepted By:** <@%s>", channelID, executor.User.ID),
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    member.User.Username,
+				IconURL: member.User.AvatarURL(""),
+			},
+		}
+
+		eventlog.AddTimeToEmbed(guild.TimeFormat, embed)
+
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseUpdateMessage,
 			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "Vetting Request Accepted!",
-						Description: fmt.Sprintf("This vetting request has been accepted and a vetting ticket has been created at <#%s>.\n\n**Accepted By:** <@%s>", channelID, executor.User.ID),
-						Author: &discordgo.MessageEmbedAuthor{
-							Name:    member.User.Username,
-							IconURL: member.User.AvatarURL(""),
-						},
-						Footer: &discordgo.MessageEmbedFooter{
-							Text: util.FormatJucheTime(time.Now()),
-						},
-					},
-				},
+				Embeds: []*discordgo.MessageEmbed{embed},
 			},
 		})
 		if err != nil {
@@ -310,22 +314,21 @@ func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) err
 			return err
 		}
 
+		embed := &discordgo.MessageEmbed{
+			Title:       "Vetting Request Rejected",
+			Description: fmt.Sprintf("This vetting request has been rejected and <@%s> has been kicked from the server.\n\n**Rejected By:** <@%s>", member.User.ID, executor.User.ID),
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    member.User.Username,
+				IconURL: member.User.AvatarURL(""),
+			},
+		}
+
+		eventlog.AddTimeToEmbed(guild.TimeFormat, embed)
+
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseUpdateMessage,
 			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "Vetting Request Rejected",
-						Description: fmt.Sprintf("This vetting request has been rejected and <@%s> has been kicked from the server.\n\n**Rejected By:** <@%s>", member.User.ID, executor.User.ID),
-						Author: &discordgo.MessageEmbedAuthor{
-							Name:    member.User.Username,
-							IconURL: member.User.AvatarURL(""),
-						},
-						Footer: &discordgo.MessageEmbedFooter{
-							Text: util.FormatJucheTime(time.Now()),
-						},
-					},
-				},
+				Embeds: []*discordgo.MessageEmbed{embed},
 			},
 		})
 		if err != nil {

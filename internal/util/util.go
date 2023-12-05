@@ -19,9 +19,6 @@
 package util
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/bwmarrin/discordgo"
 	"go.elara.ws/logger/log"
 )
@@ -31,17 +28,6 @@ import (
 // allow that by default.
 func Pointer[T any](v T) *T {
 	return &v
-}
-
-// FormatJucheTime formats the given time in Juche calendar format,
-// using pyongyang time if it's available, and otherwise UTC.
-func FormatJucheTime(t time.Time) string {
-	tz, err := time.LoadLocation("Asia/Pyongyang")
-	if err != nil {
-		tz = time.UTC
-	}
-	t = t.In(tz)
-	return fmt.Sprintf("%02d:%02d %02d-%02d Juche %d", t.Hour(), t.Minute(), t.Day(), t.Month(), t.Year()-1911)
 }
 
 // RespondEphemeral responds to an interaction with an ephemeral message.

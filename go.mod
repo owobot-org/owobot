@@ -6,6 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.27.1
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/lestrrat-go/strftime v1.0.6
 	github.com/pelletier/go-toml/v2 v2.1.0
 	github.com/rivo/uniseg v0.4.4
 	github.com/valyala/fasttemplate v1.2.2
@@ -22,6 +23,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mvdan/xurls v1.1.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect

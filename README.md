@@ -75,6 +75,7 @@ The eventlog listens for important events such as kicks, bans, role changes, etc
 
 - `/eventlog channel` can be used by anyone with the `Manage Server` permission to set the channel for the event log
 - `/eventlog ticket_channel` can be used by anyone with the `Manage Server` permission to set the channel in which ticket conversations logs will be sent
+- `/eventlog time_format` can be used by anyone with the `Manage Server` permission to set the time format for embeds. You can either use `discord` for a timezone-agnostic timestamp or a [strftime string](https://github.com/lestrrat-go/strftime#supported-conversion-specifications), which will be in UTC.
 
 ### Reactions
 

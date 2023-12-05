@@ -12,7 +12,8 @@ CREATE TABLE guilds (
   ticket_log_chan_id   TEXT NOT NULL DEFAULT '',
   ticket_category_id   TEXT NOT NULL DEFAULT '',
   vetting_req_chan_id  TEXT NOT NULL DEFAULT '',
-  vetting_role_id      TEXT NOT NULL DEFAULT ''
+  vetting_role_id      TEXT NOT NULL DEFAULT '',
+  time_format          TEXT NOT NULL DEFAULT 'discord'
 );
 
 /* tickets holds all open tickets */

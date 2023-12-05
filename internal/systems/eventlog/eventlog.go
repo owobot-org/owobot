@@ -21,7 +21,6 @@ package eventlog
 import (
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"go.elara.ws/owobot/internal/db"
@@ -63,6 +62,19 @@ func Init(s *discordgo.Session) error {
 					},
 				},
 			},
+			{
+				Name:        "time_format",
+				Description: "Set the time format for embeds",
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Name:        "format",
+						Description: "The time format to use",
+						Type:        discordgo.ApplicationCommandOptionString,
+						Required:    true,
+					},
+				},
+			},
 		},
 	})
 
@@ -76,6 +88,8 @@ func eventlogCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return channelCmd(s, i)
 	case "ticket_channel":
 		return ticketChannelCmd(s, i)
+	case "time_format":
+		return timeFormatCmd(s, i)
 	default:
 		return fmt.Errorf("unknown eventlog subcommand: %s", name)
 	}
@@ -107,6 +121,19 @@ func ticketChannelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set ticket log channel to <#%s>!", c.ID))
 }
 
+func timeFormatCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	// Get the subcommand options
+	args := i.ApplicationCommandData().Options[0].Options
+	timeFmt := args[0].StringValue()
+
+	err := db.SetTimeFormat(i.GuildID, timeFmt)
+	if err != nil {
+		return err
+	}
+
+	return util.RespondEphemeral(s, i.Interaction, "Successfully set the time format!")
+}
+
 type Entry struct {
 	Title       string
 	Description string
@@ -127,9 +154,6 @@ func Log(s *discordgo.Session, guildID string, e Entry) error {
 	embed := &discordgo.MessageEmbed{
 		Title:       e.Title,
 		Description: e.Description,
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: util.FormatJucheTime(time.Now()),
-		},
 	}
 
 	if e.Author != nil {
@@ -142,6 +166,8 @@ func Log(s *discordgo.Session, guildID string, e Entry) error {
 	if e.ImageURL != "" {
 		embed.Image = &discordgo.MessageEmbedImage{URL: e.ImageURL}
 	}
+
+	AddTimeToEmbed(guild.TimeFormat, embed)
 
 	_, err = s.ChannelMessageSendEmbed(guild.LogChanID, embed)
 	return err

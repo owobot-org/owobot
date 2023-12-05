@@ -48,7 +48,6 @@ func loadConfig() (*Config, error) {
 		}
 		fl.Close()
 	}
-	
 
 	return cfg, env.ParseWithOptions(cfg, env.Options{Prefix: "OWOBOT_"})
 }
