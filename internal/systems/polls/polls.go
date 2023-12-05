@@ -39,7 +39,7 @@ func Init(s *discordgo.Session) error {
 			},
 		},
 	})
-	
+
 	return nil
 }
 

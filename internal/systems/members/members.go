@@ -115,7 +115,7 @@ func onChannelDelete(s *discordgo.Session, cd *discordgo.ChannelDelete) {
 			continue
 		}
 
-		// If the bot deleted the channel, we don't care about this event 
+		// If the bot deleted the channel, we don't care about this event
 		if entry.UserID == s.State.User.ID {
 			return
 		}
@@ -154,7 +154,7 @@ func handleBanOrKick(s *discordgo.Session, gmr *discordgo.GuildMemberRemove) err
 	}
 
 	for _, entry := range auditLog.AuditLogEntries {
-		// If there's no action type or the user isn't the one this 
+		// If there's no action type or the user isn't the one this
 		// event is for, skip it.
 		if entry.ActionType == nil || entry.TargetID != gmr.User.ID {
 			continue

@@ -31,7 +31,7 @@ import (
 
 var neopronounValidationRegex = regexp.MustCompile(`^[a-z]+(/[a-z]+)+$`)
 
-// neopronounCmd assigns a neopronoun role to the user that ran it. 
+// neopronounCmd assigns a neopronoun role to the user that ran it.
 func neopronounCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	name := data.Options[0].StringValue()
