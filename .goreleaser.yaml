@@ -17,6 +17,7 @@ builds:
 archives:
   - files:
       - owobot.service
+      - owobot.toml
 nfpms:
   - id: owobot
     description: "Your server's guardian and entertainer"
@@ -34,6 +35,9 @@ nfpms:
     contents:
       - src: owobot.service
         dst: /etc/systemd/system/owobot.service
+      - src: owobot.toml
+        dst: /etc/owobot/config.toml
+        type: "config|noreplace"
 aurs:
   - name: owobot-bin
     homepage: 'https://gitea.elara.ws/owobot/owobot'
@@ -47,10 +51,15 @@ aurs:
       - owobot
     conflicts:
       - owobot
+    backup:
+      - etc/owobot/config.toml
     package: |-
       # binaries
       install -Dm755 ./owobot "${pkgdir}/usr/bin/owobot"
 
+      # configs
+      install -Dm644 ./owobot.toml "${pkgdir}/etc/owobot/config.toml"
+      
       # services
       install -Dm644 ./owobot.service "${pkgdir}/etc/systemd/system/owobot.service"
 release:

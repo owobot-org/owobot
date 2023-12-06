@@ -27,20 +27,33 @@ import (
 )
 
 type Config struct {
-	Token    string   `env:"TOKEN,notEmpty" toml:"token"`
-	DBPath   string   `env:"DB_PATH" envDefault:"owobot.db" toml:"db_path"`
+	Token    string   `env:"TOKEN" toml:"token"`
+	DBPath   string   `env:"DB_PATH" toml:"db_path"`
 	Activity Activity `envPrefix:"ACTIVITY_" toml:"activity"`
 }
 
 type Activity struct {
-	Type discordgo.ActivityType `env:"TYPE" envDefault:"-1" toml:"type"`
-	Name string                 `env:"NAME" envDefault:"" toml:"name"`
+	Type discordgo.ActivityType `env:"TYPE" toml:"type"`
+	Name string                 `env:"NAME" toml:"name"`
 }
 
 func loadConfig() (*Config, error) {
-	cfg := &Config{}
+	// Create a new config struct with default values
+	cfg := &Config{
+		Token:  "",
+		DBPath: "owobot.db",
+		Activity: Activity{
+			Type: -1,
+			Name: "",
+		},
+	}
 
-	fl, err := os.Open("/etc/owobot.toml")
+	configPath := os.Getenv("OWOBOT_CONFIG_PATH")
+	if configPath == "" {
+		configPath = "/etc/owobot/config.toml"
+	}
+
+	fl, err := os.Open(configPath)
 	if err == nil {
 		err = toml.NewDecoder(fl).Decode(cfg)
 		if err != nil {
@@ -48,6 +61,8 @@ func loadConfig() (*Config, error) {
 		}
 		fl.Close()
 	}
+
+	println(cfg.Activity.Type, cfg.Activity.Name)
 
 	return cfg, env.ParseWithOptions(cfg, env.Options{Prefix: "OWOBOT_"})
 }

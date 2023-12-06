@@ -1,0 +1,6 @@
+token = "CHANGE ME"
+db_path = "/etc/owobot/owobot.db"
+
+[activity]
+  type = -1
+  name = ""
