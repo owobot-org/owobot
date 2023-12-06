@@ -42,6 +42,10 @@ func vettingCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return vettingRoleCmd(s, i)
 	case "req_channel":
 		return vettingReqChannelCmd(s, i)
+	case "welcome_channel":
+		return welcomeChannelCmd(s, i)
+	case "welcome_msg":
+		return welcomeMsgCmd(s, i)
 	default:
 		return fmt.Errorf("unknown vetting subcommand: %s", name)
 	}
@@ -61,7 +65,7 @@ func vettingRoleCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set %s as the vetting role!", role.Mention()))
 }
 
-// vettingReqChannelCmd sets the vettign request channel for a guild
+// vettingReqChannelCmd sets the vetting request channel for a guild
 func vettingReqChannelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	args := data.Options[0].Options
@@ -75,6 +79,33 @@ func vettingReqChannelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set %s as the vetting request channel!", channel.Mention()))
 }
 
+// welcomeChannelCmd sets the welcome channel command for a guild
+func welcomeChannelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	data := i.ApplicationCommandData()
+	args := data.Options[0].Options
+	channel := args[0].ChannelValue(s)
+
+	err := db.SetWelcomeChannel(i.GuildID, channel.ID)
+	if err != nil {
+		return err
+	}
+
+	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set %s as the welcome channel!", channel.Mention()))
+}
+
+// welcomeChannelCmd sets the welcome message for a guild
+func welcomeMsgCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	data := i.ApplicationCommandData()
+	args := data.Options[0].Options
+
+	err := db.SetWelcomeMsg(i.GuildID, args[0].StringValue())
+	if err != nil {
+		return err
+	}
+
+	return util.RespondEphemeral(s, i.Interaction, "Successfully set the welcome message!")
+}
+
 // onMemberJoin adds the vetting role to a user when they join in order to allow them
 // to access the vetting questions
 func onMemberJoin(s *discordgo.Session, gma *discordgo.GuildMemberAdd) {
@@ -84,7 +115,11 @@ func onMemberJoin(s *discordgo.Session, gma *discordgo.GuildMemberAdd) {
 		return
 	}
 
-	if guild.VettingRoleID == "" {
+	if guild.VettingRoleID == "" || guild.VettingReqChanID == "" {
+		err = welcomeUser(s, guild, gma.Member.User)
+		if err != nil {
+			log.Warn("Error welcoming user").Err(err)
+		}
 		return
 	}
 
@@ -259,7 +294,21 @@ func onApprove(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return err
 	}
 
+	err = welcomeUser(s, guild, user)
+	if err != nil {
+		return err
+	}
+
 	return util.RespondEphemeral(s, i.Interaction, "Successfully approved "+user.Mention()+" as "+role.Mention()+"!")
+}
+
+func welcomeUser(s *discordgo.Session, guild db.Guild, user *discordgo.User) error {
+	if guild.WelcomeChanID != "" && guild.WelcomeMsg != "" {
+		msg := strings.Replace(guild.WelcomeMsg, "$user", user.Mention(), 1)
+		_, err := s.ChannelMessageSend(guild.WelcomeChanID, msg)
+		return err
+	}
+	return nil
 }
 
 // onVettingResponse handles responses to vetting requests. If the user was accepted,

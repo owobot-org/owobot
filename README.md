@@ -52,6 +52,8 @@ If a moderator accepts the request, a new ticket will be created in which mods c
 
 - `/vetting role` can be used by anyone with the `Manage Server` permission to set the server's vetting role. owobot will assign this role to all new users.
 - `/vetting req_channel` can be used by anyone with the `Manage Server` permission to set the server's vetting request channel. This is where owobot will post vetting requests.
+- `/vetting welcome_channel` can be used by anyone with the `Manage Server` permission to set the server's welcome channel. This is where owobot will welcome new users.
+- `/vetting welcome_msg` can be used by anyone with the `Manage Server` permission to set the server's welcome message. This is the message owobot will use to welcome new users. You can use `$user` in the message, which will be replaced with a user mention.
 - `/approve` can be used by anyone with the `Kick Members` permission to approve users that are in vetting.
 
 ### Tickets

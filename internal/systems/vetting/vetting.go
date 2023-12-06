@@ -31,6 +31,10 @@ const (
 )
 
 func Init(s *discordgo.Session) error {
+	s.AddHandler(onMemberJoin)
+	s.AddHandler(util.InteractionErrorHandler("on-vetting-req", onVettingRequest))
+	s.AddHandler(util.InteractionErrorHandler("on-vetting-resp", onVettingResponse))
+
 	commands.Register(s, onMakeVettingMsg, &discordgo.ApplicationCommand{
 		Name:                     "Make Vetting Message",
 		Type:                     discordgo.MessageApplicationCommand,
@@ -61,11 +65,38 @@ func Init(s *discordgo.Session) error {
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Options: []*discordgo.ApplicationCommandOption{
 					{
-						Name:         "role",
+						Name:         "channel",
 						Description:  "The channel to use for vetting requests",
 						Type:         discordgo.ApplicationCommandOptionChannel,
 						ChannelTypes: []discordgo.ChannelType{discordgo.ChannelTypeGuildText},
 						Required:     true,
+					},
+				},
+			},
+			{
+				Name:        "welcome_channel",
+				Description: "Set the welcome channel",
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Name:         "channel",
+						Description:  "The channel to use for welcoming new users",
+						Type:         discordgo.ApplicationCommandOptionChannel,
+						ChannelTypes: []discordgo.ChannelType{discordgo.ChannelTypeGuildText},
+						Required:     true,
+					},
+				},
+			},
+			{
+				Name:        "welcome_msg",
+				Description: "Set the welcome message",
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Name:        "msg",
+						Description: "The message to welcome new users with",
+						Type:        discordgo.ApplicationCommandOptionString,
+						Required:    true,
 					},
 				},
 			},
@@ -91,10 +122,6 @@ func Init(s *discordgo.Session) error {
 			},
 		},
 	})
-
-	s.AddHandler(onMemberJoin)
-	s.AddHandler(util.InteractionErrorHandler("on-vetting-req", onVettingRequest))
-	s.AddHandler(util.InteractionErrorHandler("on-vetting-resp", onVettingResponse))
 
 	return nil
 }

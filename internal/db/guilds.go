@@ -33,6 +33,8 @@ type Guild struct {
 	VettingReqChanID string `db:"vetting_req_chan_id"`
 	VettingRoleID    string `db:"vetting_role_id"`
 	TimeFormat       string `db:"time_format"`
+	WelcomeChanID    string `db:"welcome_chan_id"`
+	WelcomeMsg       string `db:"welcome_msg"`
 }
 
 func AllGuilds() ([]Guild, error) {
@@ -89,6 +91,16 @@ func SetVettingRoleID(guildID, roleID string) error {
 
 func SetTimeFormat(guildID, timeFmt string) error {
 	_, err := db.Exec("UPDATE guilds SET time_format = ? WHERE id = ?", timeFmt, guildID)
+	return err
+}
+
+func SetWelcomeChannel(guildID, channelID string) error {
+	_, err := db.Exec("UPDATE guilds SET welcome_chan_id = ? WHERE id = ?", channelID, guildID)
+	return err
+}
+
+func SetWelcomeMsg(guildID, msg string) error {
+	_, err := db.Exec("UPDATE guilds SET welcome_msg = ? WHERE id = ?", msg, guildID)
 	return err
 }
 
