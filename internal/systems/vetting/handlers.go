@@ -137,6 +137,11 @@ func onVettingRequest(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		return nil
 	}
 
+	_, err := db.VettingReqMsgID(i.GuildID, i.Member.User.ID)
+	if err == nil {
+		return errors.New("you've already sent a vetting request")
+	}
+
 	guild, err := db.GuildByID(i.GuildID)
 	if err != nil {
 		return err
@@ -161,7 +166,7 @@ func onVettingRequest(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 
 	eventlog.AddTimeToEmbed(guild.TimeFormat, embed)
 
-	_, err = s.ChannelMessageSendComplex(guild.VettingReqChanID, &discordgo.MessageSend{
+	msg, err := s.ChannelMessageSendComplex(guild.VettingReqChanID, &discordgo.MessageSend{
 		Embeds: []*discordgo.MessageEmbed{embed},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{Components: []discordgo.MessageComponent{
@@ -180,6 +185,11 @@ func onVettingRequest(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 			}},
 		},
 	})
+	if err != nil {
+		return err
+	}
+
+	err = db.AddVettingReq(i.GuildID, i.Member.User.ID, msg.ID)
 	if err != nil {
 		return err
 	}
@@ -335,5 +345,6 @@ func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) err
 			return err
 		}
 	}
-	return nil
+
+	return db.RemoveVettingReq(i.GuildID, i.Message.ID)
 }

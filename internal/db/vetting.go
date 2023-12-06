@@ -19,11 +19,11 @@
 package db
 
 func AddVettingReq(guildID, userID, msgID string) error {
-	_, err := db.Exec("INSERT OR ABORT INTO vetting_requests (guild_id, user_id, msg_id) VALUES (?, ?, ?)", guildID, userID, msgID)
+	_, err := db.Exec("INSERT INTO vetting_requests (guild_id, user_id, msg_id) VALUES (?, ?, ?)", guildID, userID, msgID)
 	return err
 }
 
-func VettingReqID(guildID, userID string) (string, error) {
+func VettingReqMsgID(guildID, userID string) (string, error) {
 	var out string
 	row := db.QueryRowx("SELECT msg_id FROM vetting_requests WHERE user_id = ? AND guild_id = ?", userID, guildID)
 	err := row.Scan(&out)
@@ -37,7 +37,7 @@ func VettingReqUserID(guildID, msgID string) (string, error) {
 	return out, err
 }
 
-func RemoveVettingReq(guildID, userID string) error {
-	_, err := db.Exec("DELETE FROM vetting_requests WHERE user_id = ? AND guild_id = ?", userID, guildID)
+func RemoveVettingReq(guildID, msgID string) error {
+	_, err := db.Exec("DELETE FROM vetting_requests WHERE msg_id = ? AND guild_id = ?", msgID, guildID)
 	return err
 }
