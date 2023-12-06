@@ -25,6 +25,7 @@ owobot is a versatile Discord bot with a wide range of capabilities, from modera
   - [Polls](#polls)
   - [Starboard](#starboard)
   - [Rate Limiting](#rate-limiting)
+- [Contributing](#contributing)
 
 ## Installation Options
 
@@ -146,3 +147,8 @@ Here are the current rate limits:
 - `channel_delete`: 10 / minute
 - `kick`: 10 / minute
 - `ban`: 7 / 5 minutes
+
+
+## Contributing
+
+See the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information about contributing to owobot.
