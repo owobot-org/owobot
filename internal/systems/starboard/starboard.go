@@ -195,7 +195,7 @@ func onReaction(s *discordgo.Session, mra *discordgo.MessageReactionAdd) {
 			},
 			Description: fmt.Sprintf(
 				"[**Jump to Message**](https://discord.com/channels/%s/%s/%s)",
-				msg.GuildID,
+				mra.GuildID,
 				msg.ChannelID,
 				msg.ID,
 			),
