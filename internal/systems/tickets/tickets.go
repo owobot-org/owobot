@@ -9,6 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"go.elara.ws/logger/log"
+	"go.elara.ws/owobot/internal/cache"
 	"go.elara.ws/owobot/internal/db"
 	"go.elara.ws/owobot/internal/systems/commands"
 	"go.elara.ws/owobot/internal/systems/eventlog"
@@ -139,15 +140,29 @@ func Open(s *discordgo.Session, guildID string, user, executor *discordgo.User) 
 		return "", err
 	}
 
+	overwrites := []*discordgo.PermissionOverwrite{{
+		ID:    user.ID,
+		Type:  discordgo.PermissionOverwriteTypeMember,
+		Allow: ticketPermissions,
+	}}
+
+	if guild.TicketCategoryID != "" {
+		category, err := cache.Channel(s, guildID, guild.TicketCategoryID)
+		if err != nil {
+			log.Error("Error getting ticket category").Err(err).Send()
+			// If we can't get the ticket category, set it to empty string
+			// so that ChannelCreate doesn't try to use it.
+			guild.TicketCategoryID = ""
+		} else {
+			overwrites = append(overwrites, category.PermissionOverwrites...)
+		}
+	}
+
 	c, err := s.GuildChannelCreateComplex(guildID, discordgo.GuildChannelCreateData{
-		Name:     "ticket-" + user.Username,
-		Type:     discordgo.ChannelTypeGuildText,
-		ParentID: guild.TicketCategoryID,
-		PermissionOverwrites: []*discordgo.PermissionOverwrite{{
-			ID:    user.ID,
-			Type:  discordgo.PermissionOverwriteTypeMember,
-			Allow: ticketPermissions,
-		}},
+		Name:                 "ticket-" + user.Username,
+		Type:                 discordgo.ChannelTypeGuildText,
+		ParentID:             guild.TicketCategoryID,
+		PermissionOverwrites: overwrites,
 	})
 	if err != nil {
 		return "", err

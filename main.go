@@ -68,6 +68,7 @@ func main() {
 	s.StateEnabled = true
 	s.State.TrackMembers = true
 	s.State.TrackRoles = true
+	s.State.TrackChannels = true
 	s.Identify.Intents |= discordgo.IntentMessageContent | discordgo.IntentGuildMembers
 
 	err = s.Open()

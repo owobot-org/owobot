@@ -103,7 +103,7 @@ func Init(s *discordgo.Session) error {
 		},
 	})
 
-	commands.Register(s, onApprove, &discordgo.ApplicationCommand{
+	commands.Register(s, approveCmd, &discordgo.ApplicationCommand{
 		Name:                     "approve",
 		Description:              "Approve a member in vetting",
 		DefaultMemberPermissions: util.Pointer[int64](discordgo.PermissionKickMembers),

@@ -232,10 +232,10 @@ func onVettingRequest(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	return util.RespondEphemeral(s, i.Interaction, "Successfully sent your vetting request!")
 }
 
-// onApprove approves a user in vetting. It removes their vetting role, assigns a
+// approveCmd approves a user in vetting. It removes their vetting role, assigns a
 // role of the approver's choosing, closes the user's vetting ticket, and logs
 // the approval.
-func onApprove(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+func approveCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	guild, err := db.GuildByID(i.GuildID)
 	if err != nil {
 		return err
@@ -287,7 +287,7 @@ func onApprove(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	err = eventlog.Log(s, i.GuildID, eventlog.Entry{
 		Title:       "New Member Approved!",
-		Description: fmt.Sprintf("User: %s\nRole: %s\nApproved By: %s", user.Mention(), role.Mention(), i.Member.User.Mention()),
+		Description: fmt.Sprintf("**User:** %s\n**Role:** %s\n**Approved By:** %s", user.Mention(), role.Mention(), i.Member.User.Mention()),
 		Author:      user,
 	})
 	if err != nil {

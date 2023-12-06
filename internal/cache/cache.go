@@ -66,6 +66,30 @@ func Role(s *discordgo.Session, guildID, roleID string) (*discordgo.Role, error)
 	return role, nil
 }
 
+// Channel gets a discord channel from the cache. If it doesn't exist in the cache, it
+// gets it from discord and adds it to the cache.
+func Channel(s *discordgo.Session, guildID, channelID string) (*discordgo.Channel, error) {
+	role, err := s.State.Channel(channelID)
+	if errors.Is(err, discordgo.ErrStateNotFound) {
+		// If the role wasn't found in the state struct,
+		// get the guild roles from discord and add them.
+		channels, err := s.GuildChannels(guildID)
+		if err != nil {
+			return nil, err
+		}
+		for _, channel := range channels {
+			err = s.State.ChannelAdd(channel)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return s.State.Channel(channelID)
+	} else if err != nil {
+		return nil, err
+	}
+	return role, nil
+}
+
 // Roles gets a list of roles in a discord guild from the cache. If it doesn't
 // exist in the cache, it gets it from discord and adds it to the cache.
 func Roles(s *discordgo.Session, guildID string) ([]*discordgo.Role, error) {
