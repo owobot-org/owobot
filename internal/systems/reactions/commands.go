@@ -77,6 +77,8 @@ func reactionsAddCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error
 		if err := validateEmoji(reaction.Reaction); err != nil {
 			return err
 		}
+		// Use the correct delimeter for the DB
+		reaction.Reaction = strings.ReplaceAll(reaction.Reaction, ",", "\x1F")
 	}
 
 	err := db.AddReaction(i.GuildID, reaction)
@@ -140,6 +142,8 @@ func validateEmoji(s string) error {
 				return fmt.Errorf("invalid reaction emoji: %s", emojiStr)
 			}
 		}
+	} else if strings.Contains(s, "\x1F") {
+		return fmt.Errorf("emoji string cannot contain unit separator")
 	} else {
 		if _, ok := emoji.Parse(s); !ok {
 			return fmt.Errorf("invalid reaction emoji: %s", s)

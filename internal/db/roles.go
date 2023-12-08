@@ -19,6 +19,7 @@
 package db
 
 import (
+	"errors"
 	"slices"
 	"strings"
 
@@ -41,8 +42,8 @@ func AddReactionRoleCategory(channelID string, rrc ReactionRoleCategory) error {
 		channelID,
 		rrc.Name,
 		rrc.Description,
-		strings.Join(rrc.Emoji, ","),
-		strings.Join(rrc.Roles, ","),
+		strings.Join(rrc.Emoji, "\x1F"),
+		strings.Join(rrc.Roles, "\x1F"),
 	)
 	return err
 }
@@ -74,6 +75,10 @@ func DeleteReactionRoleCategory(channelID, name string) error {
 }
 
 func AddReactionRole(channelID, category, emoji string, role *discordgo.Role) error {
+	if strings.Contains(category, "\x1F") || strings.Contains(emoji, "\x1F") {
+		return errors.New("reaction roles cannot contain unit separator")
+	}
+
 	var oldEmoji, oldRoles string
 	err := db.QueryRow("SELECT emoji, roles FROM reaction_role_categories WHERE name = ? AND channel_id = ?", category, channelID).Scan(&oldEmoji, &oldRoles)
 	if err != nil {
@@ -86,8 +91,8 @@ func AddReactionRole(channelID, category, emoji string, role *discordgo.Role) er
 
 	_, err = db.Exec(
 		"UPDATE reaction_role_categories SET emoji = ?, roles = ? WHERE name = ? AND channel_id = ?",
-		strings.Join(splitEmoji, ","),
-		strings.Join(splitRoles, ","),
+		strings.Join(splitEmoji, "\x1F"),
+		strings.Join(splitRoles, "\x1F"),
 		category,
 		channelID,
 	)
@@ -111,8 +116,8 @@ func DeleteReactionRole(channelID, category string, role *discordgo.Role) error 
 
 	_, err = db.Exec(
 		"UPDATE reaction_role_categories SET emoji = ?, roles = ? WHERE name = ? AND channel_id = ?",
-		strings.Join(splitEmoji, ","),
-		strings.Join(splitRoles, ","),
+		strings.Join(splitEmoji, "\x1F"),
+		strings.Join(splitRoles, "\x1F"),
 		category,
 		channelID,
 	)
