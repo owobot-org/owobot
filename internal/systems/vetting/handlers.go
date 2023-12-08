@@ -397,3 +397,31 @@ func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) err
 
 	return db.RemoveVettingReq(i.GuildID, i.Message.ID)
 }
+
+func onMemberLeave(s *discordgo.Session, gmr *discordgo.GuildMemberRemove) {
+	msgID, err := db.VettingReqMsgID(gmr.GuildID, gmr.Member.User.ID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return
+	} else if err != nil {
+		log.Error("Error getting vetting request ID after member leave").Str("user-id", gmr.Member.User.ID).Err(err).Send()
+		return
+	}
+
+	guild, err := db.GuildByID(gmr.GuildID)
+	if err != nil {
+		log.Error("Error getting guild").Str("guild-id", gmr.GuildID).Err(err).Send()
+		return
+	}
+
+	if guild.VettingReqChanID != "" {
+		err = s.ChannelMessageDelete(guild.VettingReqChanID, msgID)
+		if err != nil {
+			log.Error("Error deleting vetting request message after member leave").Str("msg-id", msgID).Err(err).Send()
+		}
+	}
+
+	err = db.RemoveVettingReq(gmr.GuildID, msgID)
+	if err != nil {
+		log.Error("Error removing vetting request after member leave").Str("user-id", gmr.Member.User.ID).Err(err).Send()
+	}
+}

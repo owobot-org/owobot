@@ -34,6 +34,7 @@ func Init(s *discordgo.Session) error {
 	s.AddHandler(onMemberJoin)
 	s.AddHandler(util.InteractionErrorHandler("on-vetting-req", onVettingRequest))
 	s.AddHandler(util.InteractionErrorHandler("on-vetting-resp", onVettingResponse))
+	s.AddHandler(onMemberLeave)
 
 	commands.Register(s, onMakeVettingMsg, &discordgo.ApplicationCommand{
 		Name:                     "Make Vetting Message",
