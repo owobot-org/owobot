@@ -243,26 +243,13 @@ func getChannelMessageLog(s *discordgo.Session, channelID string) (*bytes.Buffer
 		return nil, err
 	}
 
-	msgAmt := len(msgs)
-	for msgAmt == 100 {
-		innerMsgs, err := s.ChannelMessages(channelID, 100, "", msgs[99].ID, "")
-		if err != nil {
-			return nil, err
-		}
-		err = writeMsgs(innerMsgs, out)
-		if err != nil {
-			return nil, err
-		}
-		msgAmt = len(innerMsgs)
-	}
-
 	return out, nil
 }
 
 // writeMsgs writes a slice of messages to w.
 func writeMsgs(msgs []*discordgo.Message, w io.Writer) error {
-	for _, msg := range msgs {
-		_, err := io.WriteString(w, fmt.Sprintf("%s - %s\n", msg.Author.Username, msg.Content))
+	for i := len(msgs); i >= 0; i-- {
+		_, err := io.WriteString(w, fmt.Sprintf("%s - %s\n", msgs[i].Author.Username, msgs[i].Content))
 		if err != nil {
 			return err
 		}

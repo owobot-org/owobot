@@ -59,7 +59,7 @@ If a moderator accepts the request, a new ticket will be created in which mods c
 
 ### Tickets
 
-owobot can create tickets, which are private channels that allow users to talk directly to your server's moderators. When a ticket is closed, owobot compiles a log containing all the messages in the ticket and sends it to the event log ticket channel.
+owobot can create tickets, which are private channels that allow users to talk directly to your server's moderators. When a ticket is closed, owobot compiles a log containing up to 100 messages from the ticket and sends it to the event log ticket channel.
 
 A user can only have one open ticket at a time.
 
