@@ -285,6 +285,11 @@ func approveCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return err
 	}
 
+	err = db.RemoveVettingReq(i.GuildID, i.Message.ID)
+	if err != nil {
+		return err
+	}
+
 	err = eventlog.Log(s, i.GuildID, eventlog.Entry{
 		Title:       "New Member Approved!",
 		Description: fmt.Sprintf("**User:** %s\n**Role:** %s\n**Approved By:** %s", user.Mention(), role.Mention(), i.Member.User.Mention()),
@@ -395,7 +400,7 @@ func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) err
 		}
 	}
 
-	return db.RemoveVettingReq(i.GuildID, i.Message.ID)
+	return nil
 }
 
 func onMemberLeave(s *discordgo.Session, gmr *discordgo.GuildMemberRemove) {
