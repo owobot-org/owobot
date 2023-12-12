@@ -1,0 +1,12 @@
+version: '3'
+services:
+  owobot:
+    image: gitea.elara.ws/owobot/owobot:latest
+    restart: unless-stopped
+    volumes:
+      - ./:/data
+    environment:
+      OWOBOT_TOKEN: 'Change Me'
+      OWOBOT_DB_PATH: /data/owobot.db
+      OWOBOT_ACTIVITY_TYPE: '-1'
+      OWOBOT_ACTIVITY_NAME: ''

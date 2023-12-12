@@ -29,6 +29,8 @@ owobot is a versatile Discord bot with a wide range of capabilities, from modera
 
 ## Installation Options
 
+See the [installation guide](INSTALL.md) for in-depth instructions on installing and running owobot.
+
 ### Linux packages
 
 The [latest release](https://gitea.elara.ws/owobot/owobot/releases/latest) of owobot has packages for many distros and processors. They include a systemd service to make the bot easier to use. Just install the package, edit the bot's configuration to suit your needs, and run it using `sudo systemctl enable --now owobot`. Systemd will monitor it and make sure it's always running.
@@ -147,7 +149,6 @@ Here are the current rate limits:
 - `channel_delete`: 10 / minute
 - `kick`: 10 / minute
 - `ban`: 7 / 5 minutes
-
 
 ## Contributing
 
