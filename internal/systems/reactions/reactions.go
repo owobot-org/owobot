@@ -207,8 +207,8 @@ func performReaction(s *discordgo.Session, reaction db.Reaction, content string,
 		}
 	case db.ReactionTypeEmoji:
 		var emojis []string
-		if strings.Contains(content, ",") {
-			emojis = strings.Split(content, ",")
+		if strings.Contains(content, "\x1F") {
+			emojis = strings.Split(content, "\x1F")
 		} else {
 			emojis = []string{content}
 		}
