@@ -58,7 +58,7 @@ func getCommit() string {
 			commit = "`" + setting.Value + "`"
 		case "vcs.modified":
 			if setting.Value == "true" {
-				commit += " (dirty)"
+				commit += " (modified)"
 			}
 		}
 	}
