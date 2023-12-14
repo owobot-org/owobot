@@ -2,6 +2,7 @@ package about
 
 import (
 	"fmt"
+	"runtime/debug"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -11,6 +12,9 @@ import (
 const aboutTmpl = `**Copyright © %d owobot contributors**
 
 This program comes with **ABSOLUTELY NO WARRANTY**. This is free software, and you are welcome to redistribute it under certain conditions. See [here](https://www.gnu.org/licenses/agpl-3.0.html) for details.
+
+**Running Commit:**
+%s
 
 **Source Code:**
 https://gitea.elara.ws/owobot/owobot
@@ -31,9 +35,32 @@ func aboutCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		Data: &discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:       "About owobot",
-				Description: fmt.Sprintf(aboutTmpl, time.Now().Year()),
+				Title: "About owobot",
+				Description: fmt.Sprintf(
+					aboutTmpl,
+					time.Now().Year(),
+					getCommit(),
+				),
 			}},
 		},
 	})
+}
+
+func getCommit() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "`<unknown>`"
+	}
+	var commit = "`<unknown>`"
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			commit = "`" + setting.Value + "`"
+		case "vcs.modified":
+			if setting.Value == "true" {
+				commit += " (dirty)"
+			}
+		}
+	}
+	return commit
 }

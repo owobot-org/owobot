@@ -62,7 +62,5 @@ func loadConfig() (*Config, error) {
 		fl.Close()
 	}
 
-	println(cfg.Activity.Type, cfg.Activity.Name)
-
 	return cfg, env.ParseWithOptions(cfg, env.Options{Prefix: "OWOBOT_"})
 }
