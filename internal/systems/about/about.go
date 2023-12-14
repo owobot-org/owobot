@@ -51,7 +51,8 @@ func getCommit() string {
 	if !ok {
 		return "`<unknown>`"
 	}
-	var commit = "`<unknown>`"
+
+	commit := "`<unknown>`"
 	for _, setting := range info.Settings {
 		switch setting.Key {
 		case "vcs.revision":
@@ -62,5 +63,6 @@ func getCommit() string {
 			}
 		}
 	}
+
 	return commit
 }

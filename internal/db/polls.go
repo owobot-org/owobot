@@ -59,7 +59,7 @@ func AddPollOptionText(msgID string, text string) error {
 	if strings.Contains(text, "\x1F") {
 		return errors.New("option string cannot contain unit separator")
 	}
-	
+
 	var optText string
 	err := db.QueryRow("SELECT opt_text FROM polls WHERE msg_id = ?", msgID).Scan(&optText)
 	if err != nil {
