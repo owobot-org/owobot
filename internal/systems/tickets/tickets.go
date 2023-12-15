@@ -252,7 +252,7 @@ func writeMsgs(msgs []*discordgo.Message, w io.Writer) error {
 		return nil
 	}
 
-	for i := len(msgs); i >= 0; i-- {
+	for i := len(msgs) - 1; i >= 0; i-- {
 		_, err := io.WriteString(w, fmt.Sprintf("%s - %s\n", msgs[i].Author.Username, msgs[i].Content))
 		if err != nil {
 			return err
