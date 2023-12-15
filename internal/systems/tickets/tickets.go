@@ -248,6 +248,10 @@ func getChannelMessageLog(s *discordgo.Session, channelID string) (*bytes.Buffer
 
 // writeMsgs writes a slice of messages to w.
 func writeMsgs(msgs []*discordgo.Message, w io.Writer) error {
+	if len(msgs) == 0 {
+		return nil
+	}
+
 	for i := len(msgs); i >= 0; i-- {
 		_, err := io.WriteString(w, fmt.Sprintf("%s - %s\n", msgs[i].Author.Username, msgs[i].Content))
 		if err != nil {
