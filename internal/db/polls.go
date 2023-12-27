@@ -25,12 +25,12 @@ import (
 )
 
 type Poll struct {
-	MsgID        string
-	OwnerID      string
-	Title        string
-	Finished     bool
-	OptionEmojis []string
-	OptionText   []string
+	MsgID        string      `db:"msg_id"`
+	OwnerID      string      `db:"owner_id"`
+	Title        string      `db:"title"`
+	Finished     bool        `db:"finished"`
+	OptionEmojis StringSlice `db:"opt_emojis"`
+	OptionText   StringSlice `db:"opt_text"`
 }
 
 func CreatePoll(msgID, ownerID, title string) error {
@@ -39,20 +39,12 @@ func CreatePoll(msgID, ownerID, title string) error {
 }
 
 func GetPoll(msgID string) (*Poll, error) {
-	var title, ownerID, emojis, text string
-	var finished bool
-	err := db.QueryRow("SELECT title, owner_id, finished, opt_emojis, opt_text FROM polls WHERE msg_id = ?", msgID).Scan(&title, &ownerID, &finished, &emojis, &text)
+	out := &Poll{}
+	err := db.QueryRowx("SELECT * FROM polls WHERE msg_id = ?", msgID).StructScan(out)
 	if err != nil {
 		return nil, err
 	}
-	return &Poll{
-		MsgID:        msgID,
-		OwnerID:      ownerID,
-		Title:        title,
-		Finished:     finished,
-		OptionEmojis: splitOptions(emojis),
-		OptionText:   splitOptions(text),
-	}, nil
+	return out, nil
 }
 
 func AddPollOptionText(msgID string, text string) error {
@@ -60,16 +52,14 @@ func AddPollOptionText(msgID string, text string) error {
 		return errors.New("option string cannot contain unit separator")
 	}
 
-	var optText string
+	var optText StringSlice
 	err := db.QueryRow("SELECT opt_text FROM polls WHERE msg_id = ?", msgID).Scan(&optText)
 	if err != nil {
 		return err
 	}
+	optText = append(optText, text)
 
-	splitText := splitOptions(optText)
-	splitText = append(splitText, text)
-
-	_, err = db.Exec("UPDATE polls SET opt_text = ? WHERE msg_id = ?", strings.Join(splitText, "\x1F"), msgID)
+	_, err = db.Exec("UPDATE polls SET opt_text = ? WHERE msg_id = ?", optText, msgID)
 	return err
 }
 
@@ -78,19 +68,18 @@ func AddPollOptionEmoji(msgID string, emoji string) error {
 		return errors.New("emoji string cannot contain unit separator")
 	}
 
-	var optEmojis string
+	var optEmojis StringSlice
 	err := db.QueryRow("SELECT opt_emojis FROM polls WHERE msg_id = ?", msgID).Scan(&optEmojis)
 	if err != nil {
 		return err
 	}
 
-	splitEmojis := splitOptions(optEmojis)
-	if slices.Contains(splitEmojis, emoji) {
+	if slices.Contains(optEmojis, emoji) {
 		return errors.New("emojis can only be used once")
 	}
-	splitEmojis = append(splitEmojis, emoji)
+	optEmojis = append(optEmojis, emoji)
 
-	_, err = db.Exec("UPDATE polls SET opt_emojis = ? WHERE msg_id = ?", strings.Join(splitEmojis, "\x1F"), msgID)
+	_, err = db.Exec("UPDATE polls SET opt_emojis = ? WHERE msg_id = ?", optEmojis, msgID)
 	return err
 }
 
@@ -121,11 +110,4 @@ func VoteAmount(msgID string, option int) (int64, error) {
 	var out int64
 	err := db.QueryRow("SELECT COUNT(1) FROM votes WHERE poll_msg_id = ? AND option = ?", msgID, option).Scan(&out)
 	return out, err
-}
-
-func splitOptions(s string) []string {
-	if s == "" {
-		return nil
-	}
-	return strings.Split(s, "\x1F")
 }
