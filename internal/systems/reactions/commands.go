@@ -107,7 +107,7 @@ func reactionsListCmd(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		sb.WriteString("]_ `")
 		sb.WriteString(reaction.Match)
 		sb.WriteString("`: \"")
-		sb.WriteString(reaction.Reaction)
+		sb.WriteString(strings.ReplaceAll(reaction.Reaction, "\x1F", ","))
 		sb.WriteString("\" _(")
 		sb.WriteString(string(reaction.ReactionType))
 		sb.WriteString(")_\n")
