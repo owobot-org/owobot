@@ -9,7 +9,7 @@ import (
 type StringSlice []string
 
 func (s StringSlice) String() string {
-    return strings.Join(s, ",")
+	return strings.Join(s, ", ")
 }
 
 func (s StringSlice) Value() (driver.Value, error) {

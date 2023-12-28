@@ -27,12 +27,12 @@ import (
 )
 
 type ReactionRoleCategory struct {
-	MsgID       string   `db:"msg_id"`
-	ChannelID   string   `db:"channel_id"`
-	Name        string   `db:"name"`
-	Description string   `db:"description"`
-	Emoji       []string `db:"emoji"`
-	Roles       []string `db:"roles"`
+	MsgID       string      `db:"msg_id"`
+	ChannelID   string      `db:"channel_id"`
+	Name        string      `db:"name"`
+	Description string      `db:"description"`
+	Emoji       StringSlice `db:"emoji"`
+	Roles       StringSlice `db:"roles"`
 }
 
 func AddReactionRoleCategory(channelID string, rrc ReactionRoleCategory) error {
@@ -42,31 +42,16 @@ func AddReactionRoleCategory(channelID string, rrc ReactionRoleCategory) error {
 		channelID,
 		rrc.Name,
 		rrc.Description,
-		strings.Join(rrc.Emoji, "\x1F"),
-		strings.Join(rrc.Roles, "\x1F"),
+		rrc.Emoji,
+		rrc.Roles,
 	)
 	return err
 }
 
 func GetReactionRoleCategory(channelID, name string) (*ReactionRoleCategory, error) {
-	var msgID, description, emoji, roles string
-	err := db.QueryRow(
-		"SELECT msg_id, description, emoji, roles FROM reaction_role_categories WHERE channel_id = ? AND name = ?",
-		channelID,
-		name,
-	).Scan(&msgID, &description, &emoji, &roles)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ReactionRoleCategory{
-		MsgID:       msgID,
-		ChannelID:   channelID,
-		Name:        name,
-		Description: description,
-		Emoji:       splitOptions(emoji),
-		Roles:       splitOptions(roles),
-	}, nil
+	out := &ReactionRoleCategory{}
+	err := db.QueryRowx("SELECT * FROM reaction_role_categories WHERE channel_id = ? AND name = ?", channelID, name).StructScan(out)
+	return out, err
 }
 
 func DeleteReactionRoleCategory(channelID, name string) error {
@@ -74,25 +59,24 @@ func DeleteReactionRoleCategory(channelID, name string) error {
 	return err
 }
 
-func AddReactionRole(channelID, category, emoji string, role *discordgo.Role) error {
-	if strings.Contains(category, "\x1F") || strings.Contains(emoji, "\x1F") {
+func AddReactionRole(channelID, category, emojiStr string, role *discordgo.Role) error {
+	if strings.Contains(category, "\x1F") || strings.Contains(emojiStr, "\x1F") {
 		return errors.New("reaction roles cannot contain unit separator")
 	}
 
-	var oldEmoji, oldRoles string
-	err := db.QueryRow("SELECT emoji, roles FROM reaction_role_categories WHERE name = ? AND channel_id = ?", category, channelID).Scan(&oldEmoji, &oldRoles)
+	var emoji, roles StringSlice
+	err := db.QueryRow("SELECT emoji, roles FROM reaction_role_categories WHERE name = ? AND channel_id = ?", category, channelID).Scan(&emoji, &roles)
 	if err != nil {
 		return err
 	}
 
-	splitEmoji, splitRoles := splitOptions(oldEmoji), splitOptions(oldRoles)
-	splitEmoji = append(splitEmoji, strings.TrimSpace(emoji))
-	splitRoles = append(splitRoles, role.ID)
+	emoji = append(emoji, strings.TrimSpace(emojiStr))
+	roles = append(roles, role.ID)
 
 	_, err = db.Exec(
 		"UPDATE reaction_role_categories SET emoji = ?, roles = ? WHERE name = ? AND channel_id = ?",
-		strings.Join(splitEmoji, "\x1F"),
-		strings.Join(splitRoles, "\x1F"),
+		emoji,
+		roles,
 		category,
 		channelID,
 	)
@@ -100,24 +84,23 @@ func AddReactionRole(channelID, category, emoji string, role *discordgo.Role) er
 }
 
 func DeleteReactionRole(channelID, category string, role *discordgo.Role) error {
-	var oldEmoji, oldRoles string
-	err := db.QueryRow("SELECT emoji, roles FROM reaction_role_categories WHERE name = ? AND channel_id = ?", category, channelID).Scan(&oldEmoji, &oldRoles)
+	var emoji, roles StringSlice
+	err := db.QueryRow("SELECT emoji, roles FROM reaction_role_categories WHERE name = ? AND channel_id = ?", category, channelID).Scan(&emoji, &roles)
 	if err != nil {
 		return err
 	}
 
-	splitEmoji, splitRoles := splitOptions(oldEmoji), splitOptions(oldRoles)
-	if i := slices.Index(splitRoles, role.ID); i == -1 {
+	if i := slices.Index(roles, role.ID); i == -1 {
 		return nil
 	} else {
-		splitEmoji = append(splitEmoji[:i], splitEmoji[i+1:]...)
-		splitRoles = append(splitRoles[:i], splitRoles[i+1:]...)
+		emoji = append(emoji[:i], emoji[i+1:]...)
+		roles = append(roles[:i], roles[i+1:]...)
 	}
 
 	_, err = db.Exec(
 		"UPDATE reaction_role_categories SET emoji = ?, roles = ? WHERE name = ? AND channel_id = ?",
-		strings.Join(splitEmoji, "\x1F"),
-		strings.Join(splitRoles, "\x1F"),
+		emoji,
+		roles,
 		category,
 		channelID,
 	)

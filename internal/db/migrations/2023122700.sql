@@ -1,0 +1,1 @@
+ALTER TABLE reactions ADD COLUMN excluded_channels TEXT NOT NULL DEFAULT '';

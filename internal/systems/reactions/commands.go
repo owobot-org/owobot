@@ -41,6 +41,10 @@ func reactionsCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return reactionsListCmd(s, i)
 	case "delete":
 		return reactionsDeleteCmd(s, i)
+	case "exclude":
+		return reactionsExcludeCmd(s, i)
+	case "unexclude":
+		return reactionsUnexcludeCmd(s, i)
 	default:
 		return fmt.Errorf("unknown reactions subcommand: %s", name)
 	}
@@ -54,7 +58,6 @@ func reactionsAddCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error
 		MatchType:    db.MatchType(args[0].StringValue()),
 		Match:        strings.TrimSpace(args[1].StringValue()),
 		ReactionType: db.ReactionType(args[2].StringValue()),
-		Reaction:     strings.TrimSpace(args[3].StringValue()),
 		Chance:       100,
 	}
 
@@ -73,12 +76,16 @@ func reactionsAddCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error
 		reaction.Match = strings.ToLower(reaction.Match)
 	}
 
-	if reaction.ReactionType == db.ReactionTypeEmoji {
+	switch reaction.ReactionType {
+	case db.ReactionTypeEmoji:
+		// Convert comma-separated emoji into a StringSlice value
+		reaction.Reaction = db.StringSlice(strings.Split(strings.TrimSpace(args[3].StringValue()), ","))
 		if err := validateEmoji(reaction.Reaction); err != nil {
 			return err
 		}
-		// Use the correct delimeter for the DB
-		reaction.Reaction = strings.ReplaceAll(reaction.Reaction, ",", "\x1F")
+	case db.ReactionTypeText:
+		// Create a StringSlice with the desired text inside
+		reaction.Reaction = db.StringSlice{args[3].StringValue()}
 	}
 
 	err := db.AddReaction(i.GuildID, reaction)
@@ -95,9 +102,11 @@ func reactionsListCmd(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		return err
 	}
 
+	fmt.Println(reactions)
 	var sb strings.Builder
 	sb.WriteString("**Reactions:**\n")
 	for _, reaction := range reactions {
+		fmt.Println(reaction.Reaction)
 		sb.WriteString("- _[")
 		if reaction.Chance < 100 {
 			sb.WriteString(strconv.Itoa(reaction.Chance))
@@ -107,7 +116,7 @@ func reactionsListCmd(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		sb.WriteString("]_ `")
 		sb.WriteString(reaction.Match)
 		sb.WriteString("`: \"")
-		sb.WriteString(strings.ReplaceAll(reaction.Reaction, "\x1F", ","))
+		sb.WriteString(reaction.Reaction.String())
 		sb.WriteString("\" _(")
 		sb.WriteString(string(reaction.ReactionType))
 		sb.WriteString(")_\n")
@@ -134,19 +143,61 @@ func reactionsDeleteCmd(s *discordgo.Session, i *discordgo.InteractionCreate) er
 	return util.RespondEphemeral(s, i.Interaction, "Successfully removed reaction")
 }
 
-func validateEmoji(s string) error {
-	if strings.Contains(s, ",") {
-		split := strings.Split(s, ",")
-		for _, emojiStr := range split {
-			if _, ok := emoji.Parse(emojiStr); !ok {
-				return fmt.Errorf("invalid reaction emoji: %s", emojiStr)
-			}
-		}
-	} else if strings.Contains(s, "\x1F") {
-		return fmt.Errorf("emoji string cannot contain unit separator")
-	} else {
-		if _, ok := emoji.Parse(s); !ok {
-			return fmt.Errorf("invalid reaction emoji: %s", s)
+func reactionsExcludeCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	// Make sure the user has the manage expressions permission
+	// in case a role/member override allows someone else to use it
+	if i.Member.Permissions&discordgo.PermissionManageEmojis == 0 {
+		return errors.New("you do not have permission to exclude channels")
+	}
+
+	data := i.ApplicationCommandData()
+	args := data.Options[0].Options
+
+	channel := args[0].ChannelValue(s)
+
+	var match string
+	if len(args) == 2 {
+		match = args[1].StringValue()
+	}
+
+	err := db.ReactionsExclude(i.GuildID, match, channel.ID)
+	if err != nil {
+		return err
+	}
+
+	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully excluded %s from receiving reactions", channel.Mention()))
+}
+
+func reactionsUnexcludeCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	// Make sure the user has the manage expressions permission
+	// in case a role/member override allows someone else to use it
+	if i.Member.Permissions&discordgo.PermissionManageEmojis == 0 {
+		return errors.New("you do not have permission to unexclude channels")
+	}
+
+	data := i.ApplicationCommandData()
+	args := data.Options[0].Options
+
+	channel := args[0].ChannelValue(s)
+
+	var match string
+	if len(args) == 2 {
+		match = args[1].StringValue()
+	}
+
+	err := db.ReactionsUnexclude(i.GuildID, match, channel.ID)
+	if err != nil {
+		return err
+	}
+
+	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully unexcluded %s from receiving reactions", channel.Mention()))
+}
+
+func validateEmoji(s db.StringSlice) error {
+	for i := range s {
+		s[i] = strings.TrimSpace(s[i])
+		if _, ok := emoji.Parse(s[i]); !ok {
+			return fmt.Errorf("invalid reaction emoji: %s", s[i])
 		}
 	}
 	return nil

@@ -21,6 +21,7 @@ package reactions
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -120,6 +121,50 @@ func Init(s *discordgo.Session) error {
 					},
 				},
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "exclude",
+				Description: "Exclude a channel from having reactions",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Name:        "channel",
+						Description: "The channel which shouldn't receive reactions",
+						Type:        discordgo.ApplicationCommandOptionChannel,
+						ChannelTypes: []discordgo.ChannelType{
+							discordgo.ChannelTypeGuildText,
+							discordgo.ChannelTypeGuildForum,
+						},
+						Required: true,
+					},
+					{
+						Name:        "match",
+						Description: "The match value to exclude",
+						Type:        discordgo.ApplicationCommandOptionString,
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "unexclude",
+				Description: "Unexclude a channel from having reactions",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Name:        "channel",
+						Description: "The channel which should receive reactions",
+						Type:        discordgo.ApplicationCommandOptionChannel,
+						ChannelTypes: []discordgo.ChannelType{
+							discordgo.ChannelTypeGuildText,
+							discordgo.ChannelTypeGuildForum,
+						},
+						Required: true,
+					},
+					{
+						Name:        "match",
+						Description: "The match value to unexclude",
+						Type:        discordgo.ApplicationCommandOptionString,
+					},
+				},
+			},
 		},
 	})
 
@@ -138,6 +183,10 @@ func onMessage(s *discordgo.Session, mc *discordgo.MessageCreate) {
 	}
 
 	for _, reaction := range reactions {
+		if slices.Contains(reaction.ExcludedChannels, mc.ChannelID) {
+			continue
+		}
+
 		switch reaction.MatchType {
 		case db.MatchTypeContains:
 			if strings.Contains(strings.ToLower(mc.Content), reaction.Match) {
@@ -154,7 +203,7 @@ func onMessage(s *discordgo.Session, mc *discordgo.MessageCreate) {
 				continue
 			}
 
-			var content string
+			content := reaction.Reaction
 			switch reaction.ReactionType {
 			case db.ReactionTypeText:
 				submatch := re.FindSubmatch([]byte(mc.Content))
@@ -163,7 +212,9 @@ func onMessage(s *discordgo.Session, mc *discordgo.MessageCreate) {
 					for i, match := range submatch {
 						replacements[strconv.Itoa(i)] = match
 					}
-					content = fasttemplate.ExecuteStringStd(reaction.Reaction, "{", "}", replacements)
+					content = db.StringSlice{
+						fasttemplate.ExecuteStringStd(reaction.Reaction[0], "{", "}", replacements),
+					}
 				} else if len(submatch) == 1 {
 					content = reaction.Reaction
 				}
@@ -173,7 +224,7 @@ func onMessage(s *discordgo.Session, mc *discordgo.MessageCreate) {
 				}
 			}
 
-			if content != "" {
+			if content[0] != "" {
 				err = performReaction(s, reaction, content, mc)
 				if err != nil {
 					log.Error("Error performing reaction").Err(err).Send()
@@ -189,7 +240,7 @@ var (
 	rng    = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
-func performReaction(s *discordgo.Session, reaction db.Reaction, content string, mc *discordgo.MessageCreate) error {
+func performReaction(s *discordgo.Session, reaction db.Reaction, content db.StringSlice, mc *discordgo.MessageCreate) error {
 	if reaction.Chance < 100 {
 		rngMtx.Lock()
 		randNum := rng.Intn(100) + 1
@@ -201,19 +252,12 @@ func performReaction(s *discordgo.Session, reaction db.Reaction, content string,
 
 	switch reaction.ReactionType {
 	case db.ReactionTypeText:
-		_, err := s.ChannelMessageSendReply(mc.ChannelID, content, mc.Reference())
+		_, err := s.ChannelMessageSendReply(mc.ChannelID, content[0], mc.Reference())
 		if err != nil {
 			return err
 		}
 	case db.ReactionTypeEmoji:
-		var emojis []string
-		if strings.Contains(content, "\x1F") {
-			emojis = strings.Split(content, "\x1F")
-		} else {
-			emojis = []string{content}
-		}
-
-		for _, emojiStr := range emojis {
+		for _, emojiStr := range content {
 			e, ok := emoji.Parse(emojiStr)
 			if !ok {
 				return fmt.Errorf("invalid emoji: %s", emojiStr)
