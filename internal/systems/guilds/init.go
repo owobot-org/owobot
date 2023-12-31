@@ -29,17 +29,8 @@ func Init(s *discordgo.Session) error {
 	return guildSync(s)
 }
 
-// onGuildCreate adds a guild to the database if it doesn't already exist
-func onGuildCreate(s *discordgo.Session, gc *discordgo.GuildCreate) {
-	err := db.CreateGuild(gc.ID)
-	if err != nil {
-		log.Warn("Error creating guild").Err(err).Send()
-		return
-	}
-}
-
-// guildSync makes sure all the guilds the bot is in
-// exist in the database. If not, it adds them.
+// guildSync looks through all the guilds that the bot is in,
+// and if any of them don't exist in the database, it adds them.
 func guildSync(s *discordgo.Session) error {
 	for _, guild := range s.State.Guilds {
 		err := db.CreateGuild(guild.ID)

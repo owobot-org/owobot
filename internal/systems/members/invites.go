@@ -42,7 +42,7 @@ func addOneToMap(invite *discordgo.Invite) {
 	inviteMap[invite.Code] = invite
 }
 
-// findLastUsedInvites attempts to detect the invites that potentially might've been used last
+// findLastUsedInvites tries to detect the invites that potentially might've been used last
 // in order to figure out what invite a user used to join.
 func findLastUsedInvites(s *discordgo.Session, guildID string) ([]string, error) {
 	invites, err := s.GuildInvites(guildID)

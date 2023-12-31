@@ -34,78 +34,6 @@ import (
 	"go.elara.ws/owobot/internal/util"
 )
 
-// vettingCmd runs the correct subcommand handler for the vetting command
-func vettingCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	switch name := data.Options[0].Name; name {
-	case "role":
-		return vettingRoleCmd(s, i)
-	case "req_channel":
-		return vettingReqChannelCmd(s, i)
-	case "welcome_channel":
-		return welcomeChannelCmd(s, i)
-	case "welcome_msg":
-		return welcomeMsgCmd(s, i)
-	default:
-		return fmt.Errorf("unknown vetting subcommand: %s", name)
-	}
-}
-
-// vettingRoleCmd sets the vetting role for a guild
-func vettingRoleCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	args := data.Options[0].Options
-	role := args[0].RoleValue(s, i.GuildID)
-
-	err := db.SetVettingRoleID(i.GuildID, role.ID)
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set %s as the vetting role!", role.Mention()))
-}
-
-// vettingReqChannelCmd sets the vetting request channel for a guild
-func vettingReqChannelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	args := data.Options[0].Options
-	channel := args[0].ChannelValue(s)
-
-	err := db.SetVettingReqChannel(i.GuildID, channel.ID)
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set %s as the vetting request channel!", channel.Mention()))
-}
-
-// welcomeChannelCmd sets the welcome channel command for a guild
-func welcomeChannelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	args := data.Options[0].Options
-	channel := args[0].ChannelValue(s)
-
-	err := db.SetWelcomeChannel(i.GuildID, channel.ID)
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set %s as the welcome channel!", channel.Mention()))
-}
-
-// welcomeChannelCmd sets the welcome message for a guild
-func welcomeMsgCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	args := data.Options[0].Options
-
-	err := db.SetWelcomeMsg(i.GuildID, args[0].StringValue())
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, "Successfully set the welcome message!")
-}
-
 // onMemberJoin adds the vetting role to a user when they join in order to allow them
 // to access the vetting questions
 func onMemberJoin(s *discordgo.Session, gma *discordgo.GuildMemberAdd) {
@@ -232,90 +160,6 @@ func onVettingRequest(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	return util.RespondEphemeral(s, i.Interaction, "Successfully sent your vetting request!")
 }
 
-// approveCmd approves a user in vetting. It removes their vetting role, assigns a
-// role of the approver's choosing, closes the user's vetting ticket, and logs
-// the approval.
-func approveCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	guild, err := db.GuildByID(i.GuildID)
-	if err != nil {
-		return err
-	}
-
-	if guild.VettingRoleID == "" {
-		return errors.New("vetting role id is not set for this guild")
-	}
-
-	data := i.ApplicationCommandData()
-	user := data.Options[0].UserValue(s)
-	role := data.Options[1].RoleValue(s, i.GuildID)
-
-	_, err = db.TicketChannelID(i.GuildID, user.ID)
-	if errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("%s has no open ticket", user.Mention())
-	}
-
-	roleSetAllowed := false
-	for _, roleID := range i.Member.Roles {
-		executorRole, err := cache.Role(s, i.GuildID, roleID)
-		if err != nil {
-			return err
-		}
-		if executorRole.Position >= role.Position {
-			roleSetAllowed = true
-			break
-		}
-	}
-
-	if !roleSetAllowed {
-		return errors.New("you don't have permission to approve a user as a role higher than your own")
-	}
-
-	err = s.GuildMemberRoleAdd(i.GuildID, user.ID, role.ID)
-	if err != nil {
-		return err
-	}
-
-	err = s.GuildMemberRoleRemove(i.GuildID, user.ID, guild.VettingRoleID)
-	if err != nil {
-		return err
-	}
-
-	err = tickets.Close(s, i.GuildID, user, i.Member.User)
-	if err != nil {
-		return err
-	}
-
-	err = db.RemoveVettingReq(i.GuildID, i.Message.ID)
-	if err != nil {
-		return err
-	}
-
-	err = eventlog.Log(s, i.GuildID, eventlog.Entry{
-		Title:       "New Member Approved!",
-		Description: fmt.Sprintf("**User:** %s\n**Role:** %s\n**Approved By:** %s", user.Mention(), role.Mention(), i.Member.User.Mention()),
-		Author:      user,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = welcomeUser(s, guild, user)
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, "Successfully approved "+user.Mention()+" as "+role.Mention()+"!")
-}
-
-func welcomeUser(s *discordgo.Session, guild db.Guild, user *discordgo.User) error {
-	if guild.WelcomeChanID != "" && guild.WelcomeMsg != "" {
-		msg := strings.Replace(guild.WelcomeMsg, "$user", user.Mention(), 1)
-		_, err := s.ChannelMessageSend(guild.WelcomeChanID, msg)
-		return err
-	}
-	return nil
-}
-
 // onVettingResponse handles responses to vetting requests. If the user was accepted,
 // it creates a vetting ticket for them. If they were rejected, it kicks them from the server.
 func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -403,6 +247,7 @@ func onVettingResponse(s *discordgo.Session, i *discordgo.InteractionCreate) err
 	return nil
 }
 
+// onMemberLeave handles users leaving the server. It closes any tickets they might've had open.
 func onMemberLeave(s *discordgo.Session, gmr *discordgo.GuildMemberRemove) {
 	msgID, err := db.VettingReqMsgID(gmr.GuildID, gmr.Member.User.ID)
 	if errors.Is(err, sql.ErrNoRows) {

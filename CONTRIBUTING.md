@@ -8,9 +8,15 @@ Thanks for your interest in contributing to owobot! This page contains informati
 
 owobot consists of several independent systems, such as the `starboard` system, `members` system, `commands` system, etc. These systems are what actually interact with users and they're all in the `internal/systems` directory.
 
-All the systems that require initialization have an `Init(*discordgo.Session) error` function, which does things like registers all the commands and handlers, and performs any other initialization steps that need to be done for that system. These `Init` functions are called by `main.go` when the bot starts up.
+All the systems that require initialization have an `init.go` file with an `Init(*discordgo.Session) error` function, which does things like registers all the commands and handlers, and performs any other initialization steps that need to be done for that system. These `Init` functions are called by `main.go` when the bot starts up.
 
 The `commands` system always starts last because the other systems register commands that it needs to know about before it does its initialization.
+
+System file structure:
+
+- `init.go`: This file contains the Init function that does all the required initialization, as well as any functions meant to be imported by other systems, such as the `commands.Register()` and `eventlog.Log()` functions.
+- `handlers.go`: This file contains all the event handler functions.
+- `commands.go`: This file contains all the command handler functions.
 
 ### Database
 

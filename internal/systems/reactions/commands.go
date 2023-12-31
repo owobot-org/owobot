@@ -31,6 +31,7 @@ import (
 	"go.elara.ws/owobot/internal/util"
 )
 
+// reactionsCmd handles the `/reactions` command and routes it to the correct subcommand.
 func reactionsCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 
@@ -50,6 +51,7 @@ func reactionsCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	}
 }
 
+// reactionsAddCmd handles the `/reactions add` command.
 func reactionsAddCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	args := data.Options[0].Options
@@ -96,6 +98,7 @@ func reactionsAddCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error
 	return util.RespondEphemeral(s, i.Interaction, "Successfully added reaction!")
 }
 
+// reactionsListCmd handles the `/reactions list` command.
 func reactionsListCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	reactions, err := db.Reactions(i.GuildID)
 	if err != nil {
@@ -125,6 +128,7 @@ func reactionsListCmd(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	return util.RespondEphemeral(s, i.Interaction, sb.String())
 }
 
+// reactionsDeleteCmd handles the `/reactions delete` command.
 func reactionsDeleteCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	// Make sure the user has the manage expressions permission
 	// in case a role/member override allows someone else to use it
@@ -143,6 +147,7 @@ func reactionsDeleteCmd(s *discordgo.Session, i *discordgo.InteractionCreate) er
 	return util.RespondEphemeral(s, i.Interaction, "Successfully removed reaction")
 }
 
+// reactionsExcludeCmd handles the `/reactions exclude` command.
 func reactionsExcludeCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	// Make sure the user has the manage expressions permission
 	// in case a role/member override allows someone else to use it
@@ -168,6 +173,7 @@ func reactionsExcludeCmd(s *discordgo.Session, i *discordgo.InteractionCreate) e
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully excluded %s from receiving reactions", channel.Mention()))
 }
 
+// reactionsUnexcludeCmd handles the `/reactions unexclude` command.
 func reactionsUnexcludeCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	// Make sure the user has the manage expressions permission
 	// in case a role/member override allows someone else to use it
@@ -193,6 +199,8 @@ func reactionsUnexcludeCmd(s *discordgo.Session, i *discordgo.InteractionCreate)
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully unexcluded %s from receiving reactions", channel.Mention()))
 }
 
+// validateEmoji checks if the given slice of emoji is valid.
+// If an invalid emoji is found, it returns an error.
 func validateEmoji(s db.StringSlice) error {
 	for i := range s {
 		s[i] = strings.TrimSpace(s[i])

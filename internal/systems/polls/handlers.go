@@ -15,68 +15,9 @@ import (
 	"go.elara.ws/logger/log"
 	"go.elara.ws/owobot/internal/db"
 	"go.elara.ws/owobot/internal/emoji"
-	"go.elara.ws/owobot/internal/systems/commands"
 	"go.elara.ws/owobot/internal/util"
 	"go.elara.ws/owobot/internal/xsync"
 )
-
-func Init(s *discordgo.Session) error {
-	s.AddHandler(util.InteractionErrorHandler("poll-add-opt", onPollAddOpt))
-	s.AddHandler(util.InteractionErrorHandler("poll-opt-submit", onAddOptModalSubmit))
-	s.AddHandler(util.InteractionErrorHandler("poll-finish", onPollFinish))
-	s.AddHandler(onPollReaction)
-	s.AddHandler(onVote)
-
-	commands.Register(s, pollCmd, &discordgo.ApplicationCommand{
-		Name:        "poll",
-		Description: "Create a new poll",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Name:        "title",
-				Description: "The title of the poll",
-				Type:        discordgo.ApplicationCommandOptionString,
-				Required:    true,
-			},
-		},
-	})
-
-	return nil
-}
-
-func pollCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	title := data.Options[0].StringValue()
-
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "**" + title + "**",
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label:    "Add Option",
-						Style:    discordgo.PrimaryButton,
-						CustomID: "poll-add-opt",
-					},
-					discordgo.Button{
-						Label:    "Finish",
-						Style:    discordgo.SuccessButton,
-						CustomID: "poll-finish",
-					},
-				}},
-			},
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	msg, err := s.InteractionResponse(i.Interaction)
-	if err != nil {
-		return err
-	}
-	return db.CreatePoll(msg.ID, i.Member.User.ID, title)
-}
 
 // onPollAddOpt handles the Add Option button on unfinished polls.
 func onPollAddOpt(s *discordgo.Session, i *discordgo.InteractionCreate) error {

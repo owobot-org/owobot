@@ -19,7 +19,6 @@
 package eventlog
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/bwmarrin/discordgo"
@@ -81,59 +80,7 @@ func Init(s *discordgo.Session) error {
 	return nil
 }
 
-func eventlogCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	switch name := data.Options[0].Name; name {
-	case "channel":
-		return channelCmd(s, i)
-	case "ticket_channel":
-		return ticketChannelCmd(s, i)
-	case "time_format":
-		return timeFormatCmd(s, i)
-	default:
-		return fmt.Errorf("unknown eventlog subcommand: %s", name)
-	}
-}
-
-func channelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	// Get the subcommand options
-	args := i.ApplicationCommandData().Options[0].Options
-
-	c := args[0].ChannelValue(s)
-	err := db.SetLogChannel(i.GuildID, c.ID)
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set event log channel to <#%s>!", c.ID))
-}
-
-func ticketChannelCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	// Get the subcommand options
-	args := i.ApplicationCommandData().Options[0].Options
-
-	c := args[0].ChannelValue(s)
-	err := db.SetTicketLogChannel(i.GuildID, c.ID)
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set ticket log channel to <#%s>!", c.ID))
-}
-
-func timeFormatCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	// Get the subcommand options
-	args := i.ApplicationCommandData().Options[0].Options
-	timeFmt := args[0].StringValue()
-
-	err := db.SetTimeFormat(i.GuildID, timeFmt)
-	if err != nil {
-		return err
-	}
-
-	return util.RespondEphemeral(s, i.Interaction, "Successfully set the time format!")
-}
-
+// Entry represents an entry in the event log
 type Entry struct {
 	Title       string
 	Description string
@@ -141,6 +88,7 @@ type Entry struct {
 	Author      *discordgo.User
 }
 
+// Log writes an entry to the event log channel if it exists
 func Log(s *discordgo.Session, guildID string, e Entry) error {
 	guild, err := db.GuildByID(guildID)
 	if err != nil {
@@ -173,6 +121,7 @@ func Log(s *discordgo.Session, guildID string, e Entry) error {
 	return err
 }
 
+// TicketMsgLog writes a message log to the ticket log channel if it exists
 func TicketMsgLog(s *discordgo.Session, guildID string, msgLog io.Reader) error {
 	guild, err := db.GuildByID(guildID)
 	if err != nil {

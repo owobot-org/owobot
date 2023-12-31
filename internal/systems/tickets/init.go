@@ -2,8 +2,6 @@ package tickets
 
 import (
 	"bytes"
-	"database/sql"
-	"errors"
 	"fmt"
 	"io"
 
@@ -70,61 +68,6 @@ func Init(s *discordgo.Session) error {
 	})
 
 	return nil
-}
-
-// ticketCategoryCmd sets the category in which future ticket channels will be created
-func ticketCategoryCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	category := data.Options[0].ChannelValue(s)
-	err := db.SetTicketCategory(i.GuildID, category.ID)
-	if err != nil {
-		return err
-	}
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully set the ticket category to `%s`!", category.Name))
-}
-
-// modTicketCmd handles the mod_ticket command. It opens a new ticket for the given user.
-func modTicketCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	chID, err := Open(s, i.GuildID, data.Options[0].UserValue(s), i.Member.User)
-	if err != nil {
-		return err
-	}
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully opened a ticket at <#%s>!", chID))
-}
-
-// ticketCmd handles the ticket command. It opens a new ticket for the user that ran it.
-func ticketCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	chID, err := Open(s, i.GuildID, i.Member.User, i.Member.User)
-	if err != nil {
-		return err
-	}
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully opened a ticket at <#%s>!", chID))
-}
-
-// closeTicketCmd handles the close_ticket command. It closes the ticket that the given user
-// has open if it exists.
-func closeTicketCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	data := i.ApplicationCommandData()
-	user := data.Options[0].UserValue(s)
-	err := Close(s, i.GuildID, user, i.Member.User)
-	if err != nil {
-		return err
-	}
-	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully closed ticket for <@%s>", user.ID))
-}
-
-// onMemberLeave closes any tickets a user had open when they leave
-func onMemberLeave(s *discordgo.Session, gmr *discordgo.GuildMemberRemove) {
-	// If the user had a ticket open when they left, make sure to close it.
-	err := Close(s, gmr.GuildID, gmr.User, s.State.User)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If the error is ErrNoRows, the user didn't have a ticket, so just return
-		return
-	} else if err != nil {
-		log.Warn("Error removing ticket after user left").Err(err).Send()
-		return
-	}
 }
 
 // Open opens a new ticket. It checks if a ticket already exists, and if not, creates a new channel for it,

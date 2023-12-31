@@ -20,15 +20,18 @@ package roles
 
 import (
 	"fmt"
+	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"go.elara.ws/owobot/internal/cache"
 	"go.elara.ws/owobot/internal/db"
 	"go.elara.ws/owobot/internal/emoji"
 	"go.elara.ws/owobot/internal/util"
 )
 
-// reactionRolesCmd calls the correct subcommand handler for the reaction_roles command
+// reactionRolesCmd handles the `/reaction_roles` command and routes it to the correct subcommand.
 func reactionRolesCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 
@@ -46,7 +49,7 @@ func reactionRolesCmd(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	}
 }
 
-// reactionRolesNewCategoryCmd creates a new reaction role category.
+// reactionRolesNewCategoryCmd handles the `/reaction_roles new_category` command.
 func reactionRolesNewCategoryCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	args := data.Options[0].Options
@@ -76,7 +79,7 @@ func reactionRolesNewCategoryCmd(s *discordgo.Session, i *discordgo.InteractionC
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully added a new reaction role category called `%s`!", rrc.Name))
 }
 
-// reactionRolesRemoveCategoryCmd removes an existing reaction role category.
+// reactionRolesRemoveCategoryCmd handles the `/reaction_roles remove_category` command.
 func reactionRolesRemoveCategoryCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	args := data.Options[0].Options
@@ -101,7 +104,7 @@ func reactionRolesRemoveCategoryCmd(s *discordgo.Session, i *discordgo.Interacti
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Removed reaction role category `%s`", args[0].StringValue()))
 }
 
-// reactionRolesAddCmd adds a reaction role to a category.
+// reactionRolesAddCmd handles the `/reaction_roles add` command.
 func reactionRolesAddCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	args := data.Options[0].Options
@@ -128,7 +131,7 @@ func reactionRolesAddCmd(s *discordgo.Session, i *discordgo.InteractionCreate) e
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Added reaction role %s to `%s`", role.Mention(), category))
 }
 
-// reactionRolesRemoveCmd removes a reaction role from a category.
+// reactionRolesRemoveCmd handles the `/reaction_roles remove` command.
 func reactionRolesRemoveCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	args := data.Options[0].Options
@@ -147,6 +150,64 @@ func reactionRolesRemoveCmd(s *discordgo.Session, i *discordgo.InteractionCreate
 	}
 
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Removed reaction role %s from `%s`", role.Mention(), category))
+}
+
+var neopronounValidationRegex = regexp.MustCompile(`^[a-z]+(/[a-z]+)+$`)
+
+// neopronounCmd handles the `/neopronoun` command.
+func neopronounCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	data := i.ApplicationCommandData()
+	name := data.Options[0].StringValue()
+	name = strings.ToLower(name)
+
+	if !neopronounValidationRegex.MatchString(name) {
+		return fmt.Errorf("invalid neopronoun: `%s`", name)
+	}
+
+	roles, err := cache.Roles(s, i.GuildID)
+	if err != nil {
+		return err
+	}
+
+	var roleID string
+	for _, role := range roles {
+		// Skip this role if it provides any permissions, so that
+		// we don't accidentally grant the member any extra permissions
+		if role.Permissions != 0 {
+			continue
+		}
+
+		if role.Name == name {
+			roleID = role.ID
+			break
+		}
+	}
+
+	if roleID == "" {
+		role, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+			Name:        name,
+			Mentionable: util.Pointer(false),
+			Permissions: util.Pointer[int64](0),
+		})
+		if err != nil {
+			return err
+		}
+		roleID = role.ID
+	}
+
+	if slices.Contains(i.Member.Roles, roleID) {
+		err = s.GuildMemberRoleRemove(i.GuildID, i.Member.User.ID, roleID)
+		if err != nil {
+			return err
+		}
+		return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Unassigned the `%s` role", name))
+	} else {
+		err = s.GuildMemberRoleAdd(i.GuildID, i.Member.User.ID, roleID)
+		if err != nil {
+			return err
+		}
+		return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully assigned the `%s` role to you!", name))
+	}
 }
 
 // updateReactionRoleCategoryMsg updates a reaction role category message

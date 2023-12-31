@@ -41,28 +41,6 @@ func Init(s *discordgo.Session) error {
 	return err
 }
 
-func onCmd(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionApplicationCommand {
-		return
-	}
-
-	data := i.ApplicationCommandData()
-
-	mu.Lock()
-	defer mu.Unlock()
-	cmdFn, ok := cmds[data.Name]
-	if !ok {
-		return
-	}
-
-	err := cmdFn(s, i)
-	if err != nil {
-		log.Warn("Error in command function").Str("cmd", data.Name).Err(err).Send()
-		sendError(s, i.Interaction, err)
-		return
-	}
-}
-
 func Register(s *discordgo.Session, fn CmdFunc, ac *discordgo.ApplicationCommand) {
 	// If the DM permission hasn't been explicitly set, assume false
 	if ac.DMPermission == nil {
@@ -79,14 +57,6 @@ func Register(s *discordgo.Session, fn CmdFunc, ac *discordgo.ApplicationCommand
 	mu.Unlock()
 
 	acs = append(acs, ac)
-}
-
-func sendError(s *discordgo.Session, i *discordgo.Interaction, serr error) {
-	err := util.RespondEphemeral(s, i, "ERROR: "+serr.Error())
-	if err != nil {
-		log.Warn("Error while trying to send error").Err(err).Send()
-		return
-	}
 }
 
 // commandSync checks if any registered commands have been removed and, if so,
