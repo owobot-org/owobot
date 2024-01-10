@@ -74,7 +74,7 @@ func onMakeVettingMsg(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 						Label:    "Request Vetting",
 						Style:    discordgo.SuccessButton,
 						Disabled: false,
-						Emoji:    discordgo.ComponentEmoji{Name: clipboardEmoji},
+						Emoji:    &discordgo.ComponentEmoji{Name: clipboardEmoji},
 						CustomID: "vetting-req",
 					},
 				}},
@@ -135,13 +135,13 @@ func onVettingRequest(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 			discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 				discordgo.Button{
 					Label:    "Accept",
-					Emoji:    discordgo.ComponentEmoji{Name: checkEmoji},
+					Emoji:    &discordgo.ComponentEmoji{Name: checkEmoji},
 					Style:    discordgo.SuccessButton,
 					CustomID: "vetting-accept:" + i.Member.User.ID,
 				},
 				discordgo.Button{
 					Label:    "Reject",
-					Emoji:    discordgo.ComponentEmoji{Name: crossEmoji},
+					Emoji:    &discordgo.ComponentEmoji{Name: crossEmoji},
 					Style:    discordgo.DangerButton,
 					CustomID: "vetting-reject:" + i.Member.User.ID,
 				},

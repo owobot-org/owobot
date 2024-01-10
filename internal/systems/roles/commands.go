@@ -250,7 +250,7 @@ func updateReactionRoleCategoryMsg(s *discordgo.Session, channelID, category str
 		currentRow.Components = append(currentRow.Components, discordgo.Button{
 			CustomID: "role:" + roleID,
 			Style:    discordgo.SecondaryButton,
-			Emoji: discordgo.ComponentEmoji{
+			Emoji: &discordgo.ComponentEmoji{
 				Name: e.Name,
 				ID:   e.ID,
 			},

@@ -158,7 +158,7 @@ func onPollFinish(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		currentRow.Components = append(currentRow.Components, discordgo.Button{
 			CustomID: "vote:" + strconv.Itoa(i) + ":" + privacyToken,
 			Style:    discordgo.SecondaryButton,
-			Emoji: discordgo.ComponentEmoji{
+			Emoji: &discordgo.ComponentEmoji{
 				Name: e.Name,
 				ID:   e.ID,
 			},
