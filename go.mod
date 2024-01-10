@@ -3,7 +3,7 @@ module go.elara.ws/owobot
 go 1.21.0
 
 require (
-	github.com/bwmarrin/discordgo v0.27.1
+	github.com/bwmarrin/discordgo v0.27.2-0.20240104191117-afc57886f91a
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lestrrat-go/strftime v1.0.6
@@ -12,7 +12,6 @@ require (
 	github.com/valyala/fasttemplate v1.2.2
 	go.elara.ws/logger v0.0.0-20230928062203-85e135cf02ae
 	modernc.org/sqlite v1.27.0
-	mvdan.cc/xurls v1.1.0
 	mvdan.cc/xurls/v2 v2.5.0
 )
 
@@ -23,7 +22,6 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mvdan/xurls v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
