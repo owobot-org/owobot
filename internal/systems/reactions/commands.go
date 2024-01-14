@@ -105,11 +105,9 @@ func reactionsListCmd(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		return err
 	}
 
-	fmt.Println(reactions)
 	var sb strings.Builder
 	sb.WriteString("**Reactions:**\n")
 	for _, reaction := range reactions {
-		fmt.Println(reaction.Reaction)
 		sb.WriteString("- _[")
 		if reaction.Chance < 100 {
 			sb.WriteString(strconv.Itoa(reaction.Chance))

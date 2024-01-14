@@ -51,7 +51,7 @@ func onMessage(s *discordgo.Session, mc *discordgo.MessageCreate) {
 				continue
 			}
 
-			content := reaction.Reaction
+			var content db.StringSlice
 			switch reaction.ReactionType {
 			case db.ReactionTypeText:
 				submatch := re.FindSubmatch([]byte(mc.Content))
@@ -72,7 +72,7 @@ func onMessage(s *discordgo.Session, mc *discordgo.MessageCreate) {
 				}
 			}
 
-			if content[0] != "" {
+			if content != nil {
 				err = performReaction(s, reaction, content, mc)
 				if err != nil {
 					log.Error("Error performing reaction").Err(err).Send()
