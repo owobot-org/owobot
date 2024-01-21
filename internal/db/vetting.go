@@ -37,7 +37,7 @@ func VettingReqUserID(guildID, msgID string) (string, error) {
 	return out, err
 }
 
-func RemoveVettingReq(guildID, msgID string) error {
-	_, err := db.Exec("DELETE FROM vetting_requests WHERE msg_id = ? AND guild_id = ?", msgID, guildID)
+func RemoveVettingReq(guildID, userID string) error {
+	_, err := db.Exec("DELETE FROM vetting_requests WHERE user_id = ? AND guild_id = ?", userID, guildID)
 	return err
 }

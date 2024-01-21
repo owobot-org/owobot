@@ -137,7 +137,7 @@ func approveCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return err
 	}
 
-	err = db.RemoveVettingReq(i.GuildID, i.Message.ID)
+	err = db.RemoveVettingReq(i.GuildID, user.ID)
 	if err != nil {
 		return err
 	}
