@@ -270,7 +270,7 @@ func onMemberLeave(s *discordgo.Session, gmr *discordgo.GuildMemberRemove) {
 		}
 	}
 
-	err = db.RemoveVettingReq(gmr.GuildID, msgID)
+	err = db.RemoveVettingReq(gmr.GuildID, gmr.Member.User.ID)
 	if err != nil {
 		log.Error("Error removing vetting request after member leave").Str("user-id", gmr.Member.User.ID).Err(err).Send()
 	}
