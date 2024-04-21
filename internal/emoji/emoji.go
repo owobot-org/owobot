@@ -60,6 +60,11 @@ var (
 				Hi:     0x1F9FF,
 				Stride: 1,
 			},
+			{ // Symbols and Pictographs Extended-A
+				Lo:     0x1FA70,
+				Hi:     0x1FAFF,
+				Stride: 1,
+			},
 		},
 		R16: []unicode.Range16{
 			{ // Zero-width characters
