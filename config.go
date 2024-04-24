@@ -27,9 +27,10 @@ import (
 )
 
 type Config struct {
-	Token    string   `env:"TOKEN" toml:"token"`
-	DBPath   string   `env:"DB_PATH" toml:"db_path"`
-	Activity Activity `envPrefix:"ACTIVITY_" toml:"activity"`
+	Token     string   `env:"TOKEN" toml:"token"`
+	DBPath    string   `env:"DB_PATH" toml:"db_path"`
+	PluginDir string   `env:"PLUGIN_DIR" toml:"plugin_dir"`
+	Activity  Activity `envPrefix:"ACTIVITY_" toml:"activity"`
 }
 
 type Activity struct {
@@ -40,8 +41,9 @@ type Activity struct {
 func loadConfig() (*Config, error) {
 	// Create a new config struct with default values
 	cfg := &Config{
-		Token:  "",
-		DBPath: "owobot.db",
+		Token:     "",
+		DBPath:    "owobot.db",
+		PluginDir: "plugins",
 		Activity: Activity{
 			Type: -1,
 			Name: "",

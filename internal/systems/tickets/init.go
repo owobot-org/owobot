@@ -78,6 +78,10 @@ func Open(s *discordgo.Session, guildID string, user, executor *discordgo.User) 
 		return "", fmt.Errorf("ticket already exists for %s at <#%s>", user.Mention(), channelID)
 	}
 
+	if executor == nil {
+		executor = s.State.User
+	}
+
 	guild, err := db.GuildByID(guildID)
 	if err != nil {
 		return "", err
@@ -129,6 +133,10 @@ func Close(s *discordgo.Session, guildID string, user, executor *discordgo.User)
 	channelID, err := db.TicketChannelID(guildID, user.ID)
 	if err != nil {
 		return err
+	}
+
+	if executor == nil {
+		executor = s.State.User
 	}
 
 	guild, err := db.GuildByID(guildID)

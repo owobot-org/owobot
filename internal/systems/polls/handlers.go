@@ -305,7 +305,7 @@ func updatePollUnfinished(s *discordgo.Session, msgID, channelID string) error {
 		ID:      msgID,
 		Channel: channelID,
 		Content: &content,
-		Components: []discordgo.MessageComponent{
+		Components: &[]discordgo.MessageComponent{
 			discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 				discordgo.Button{
 					Label:    "Add Option",

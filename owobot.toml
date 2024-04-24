@@ -1,5 +1,6 @@
 token = "CHANGE ME"
 db_path = "/etc/owobot/owobot.db"
+plugin_dir = "/etc/owobot/plugins"
 
 [activity]
   type = -1

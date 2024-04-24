@@ -21,20 +21,23 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"slices"
 )
 
 type Guild struct {
-	ID               string `db:"id"`
-	StarboardChanID  string `db:"starboard_chan_id"`
-	StarboardStars   int    `db:"starboard_stars"`
-	LogChanID        string `db:"log_chan_id"`
-	TicketLogChanID  string `db:"ticket_log_chan_id"`
-	TicketCategoryID string `db:"ticket_category_id"`
-	VettingReqChanID string `db:"vetting_req_chan_id"`
-	VettingRoleID    string `db:"vetting_role_id"`
-	TimeFormat       string `db:"time_format"`
-	WelcomeChanID    string `db:"welcome_chan_id"`
-	WelcomeMsg       string `db:"welcome_msg"`
+	ID               string      `db:"id"`
+	StarboardChanID  string      `db:"starboard_chan_id"`
+	StarboardStars   int         `db:"starboard_stars"`
+	LogChanID        string      `db:"log_chan_id"`
+	TicketLogChanID  string      `db:"ticket_log_chan_id"`
+	TicketCategoryID string      `db:"ticket_category_id"`
+	VettingReqChanID string      `db:"vetting_req_chan_id"`
+	VettingRoleID    string      `db:"vetting_role_id"`
+	TimeFormat       string      `db:"time_format"`
+	WelcomeChanID    string      `db:"welcome_chan_id"`
+	WelcomeMsg       string      `db:"welcome_msg"`
+	EnabledPlugins   StringSlice `db:"enabled_plugins"`
 }
 
 func AllGuilds() ([]Guild, error) {
@@ -101,6 +104,39 @@ func SetWelcomeChannel(guildID, channelID string) error {
 
 func SetWelcomeMsg(guildID, msg string) error {
 	_, err := db.Exec("UPDATE guilds SET welcome_msg = ? WHERE id = ?", msg, guildID)
+	return err
+}
+
+func EnablePlugin(guildID, pluginName string) error {
+	var enabledPlugins StringSlice
+	err := db.QueryRow("SELECT enabled_plugins FROM guilds WHERE id = ?", guildID).Scan(&enabledPlugins)
+	if err != nil {
+		return err
+	}
+
+	if slices.Contains(enabledPlugins, pluginName) {
+		return fmt.Errorf("y: ploogin %q is already enabled", pluginName)
+	}
+	enabledPlugins = append(enabledPlugins, pluginName)
+
+	_, err = db.Exec("UPDATE guilds SET enabled_plugins = ? WHERE id = ?", enabledPlugins, guildID)
+	return err
+}
+
+func DisablePlugin(guildID, pluginName string) error {
+	var enabledPlugins StringSlice
+	err := db.QueryRow("SELECT enabled_plugins FROM guilds WHERE id = ?", guildID).Scan(&enabledPlugins)
+	if err != nil {
+		return err
+	}
+
+	if i := slices.Index(enabledPlugins, pluginName); i == -1 {
+		return fmt.Errorf("ploogin %q is already disabled", pluginName)
+	} else {
+		enabledPlugins = append(enabledPlugins[:i], enabledPlugins[i+1:]...)
+	}
+
+	_, err = db.Exec("UPDATE guilds SET enabled_plugins = ? WHERE id = ?", enabledPlugins, guildID)
 	return err
 }
 

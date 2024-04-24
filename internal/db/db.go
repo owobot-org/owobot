@@ -34,6 +34,11 @@ var migrations embed.FS
 
 var db *sqlx.DB
 
+// DB returns the global database instance
+func DB() *sqlx.DB {
+	return db
+}
+
 // Init opens the database and applies migrations
 func Init(ctx context.Context, dsn string) error {
 	g, err := sqlx.Open("sqlite", dsn)

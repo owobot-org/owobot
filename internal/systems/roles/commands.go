@@ -264,13 +264,13 @@ func updateReactionRoleCategoryMsg(s *discordgo.Session, channelID, category str
 	_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		Channel: channelID,
 		ID:      rrc.MsgID,
-		Embeds: []*discordgo.MessageEmbed{
+		Embeds: &[]*discordgo.MessageEmbed{
 			{
 				Title:       rrc.Name,
 				Description: sb.String(),
 			},
 		},
-		Components: components,
+		Components: &components,
 	})
 	return err
 }

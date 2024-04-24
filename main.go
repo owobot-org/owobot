@@ -33,6 +33,7 @@ import (
 	"go.elara.ws/owobot/internal/systems/eventlog"
 	"go.elara.ws/owobot/internal/systems/guilds"
 	"go.elara.ws/owobot/internal/systems/members"
+	"go.elara.ws/owobot/internal/systems/plugins"
 	"go.elara.ws/owobot/internal/systems/polls"
 	"go.elara.ws/owobot/internal/systems/reactions"
 	"go.elara.ws/owobot/internal/systems/roles"
@@ -85,6 +86,11 @@ func main() {
 		}
 	}
 
+	err = plugins.Load(cfg.PluginDir)
+	if err != nil {
+		log.Error("Error running plugin file").Err(err).Send()
+	}
+
 	initSystems(
 		s,
 		starboard.Init,
@@ -97,6 +103,7 @@ func main() {
 		reactions.Init,
 		roles.Init,
 		about.Init,
+		plugins.Init,
 		commands.Init, // The commands system should always go last
 	)
 
