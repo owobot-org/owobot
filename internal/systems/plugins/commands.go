@@ -11,8 +11,8 @@ import (
 	"go.elara.ws/owobot/internal/util"
 )
 
-// pluginCmd handles the `/plugin` command and routes it to the correct subcommand.
-func pluginCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+// pluginadmCmd handles the `/plugin` command and routes it to the correct subcommand.
+func pluginadmCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
 	switch name := data.Options[0].Name; name {
 	case "list":
@@ -22,7 +22,7 @@ func pluginCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	case "disable":
 		return disableCmd(s, i)
 	default:
-		return fmt.Errorf("unknown plugin subcommand: %s", name)
+		return fmt.Errorf("unknown pluginadm subcommand: %s", name)
 	}
 }
 
@@ -107,10 +107,22 @@ func disableCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return util.RespondEphemeral(s, i.Interaction, fmt.Sprintf("Successfully disabled the %q plugin", pluginName))
 }
 
-// phelpCmd handles the `/phelp` command.
-func phelpCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+func pluginCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
-	cmdStr := data.Options[0].StringValue()
+	switch name := data.Options[0].Name; name {
+	case "run":
+		return pluginRunCmd(s, i)
+	case "help":
+		return pluginHelpCmd(s, i)
+	default:
+		return fmt.Errorf("unknown plugin subcommand: %s", name)
+	}
+}
+
+// pluginHelpCmd handles the `/phelp` command.
+func pluginHelpCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	data := i.ApplicationCommandData()
+	cmdStr := data.Options[0].Options[0].StringValue()
 
 	args, err := shellquote.Split(cmdStr)
 	if err != nil {
@@ -176,10 +188,10 @@ func phelpCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return fmt.Errorf("command not found: %q", args[0])
 }
 
-// prunCmd handles the `/prunCmd` command.
-func prunCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+// pluginRunCmd handles the `/pluginRunCmd` command.
+func pluginRunCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	data := i.ApplicationCommandData()
-	cmdStr := data.Options[0].StringValue()
+	cmdStr := data.Options[0].Options[0].StringValue()
 
 	args, err := shellquote.Split(cmdStr)
 	if err != nil {

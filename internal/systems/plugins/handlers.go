@@ -70,11 +70,11 @@ func handleAutocomplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	data := i.ApplicationCommandData()
-	if data.Name != "prun" && data.Name != "phelp" {
+	if data.Name != "plugin" {
 		return
 	}
 
-	cmdStr := data.Options[0].StringValue()
+	cmdStr := data.Options[0].Options[0].StringValue()
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionApplicationCommandAutocompleteResult,

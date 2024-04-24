@@ -22,36 +22,43 @@ func Init(s *discordgo.Session) error {
 		return err
 	}
 
-	commands.Register(s, prunCmd, &discordgo.ApplicationCommand{
-		Name:        "prun",
-		Description: "Run a plugin command",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:         discordgo.ApplicationCommandOptionString,
-				Name:         "cmd",
-				Description:  "The plugin command to run",
-				Required:     true,
-				Autocomplete: true,
-			},
-		},
-	})
-
-	commands.Register(s, phelpCmd, &discordgo.ApplicationCommand{
-		Name:        "phelp",
-		Description: "Display help for a plugin command",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:         discordgo.ApplicationCommandOptionString,
-				Name:         "cmd",
-				Description:  "The plugin command to display help for",
-				Required:     true,
-				Autocomplete: true,
-			},
-		},
-	})
-
 	commands.Register(s, pluginCmd, &discordgo.ApplicationCommand{
-		Name:                     "plugin",
+		Name:        "plugin",
+		Description: "Interact with the plugins on this server",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "run",
+				Description: "Run a plugin command",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:         discordgo.ApplicationCommandOptionString,
+						Name:         "cmd",
+						Description:  "The plugin command to run",
+						Required:     true,
+						Autocomplete: true,
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "help",
+				Description: "See how to use a plugin command",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:         discordgo.ApplicationCommandOptionString,
+						Name:         "cmd",
+						Description:  "The plugin command to help with",
+						Required:     true,
+						Autocomplete: true,
+					},
+				},
+			},
+		},
+	})
+
+	commands.Register(s, pluginadmCmd, &discordgo.ApplicationCommand{
+		Name:                     "pluginadm",
 		Description:              "Manage dynamic plugins for your server",
 		DefaultMemberPermissions: util.Pointer[int64](discordgo.PermissionManageServer),
 		Options: []*discordgo.ApplicationCommandOption{
