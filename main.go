@@ -86,7 +86,7 @@ func main() {
 		}
 	}
 
-	err = plugins.Load(cfg.PluginDir)
+	err = plugins.Load(cfg.PluginDir, s)
 	if err != nil {
 		log.Error("Error running plugin file").Err(err).Send()
 	}

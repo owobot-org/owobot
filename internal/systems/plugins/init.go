@@ -102,7 +102,7 @@ func Init(s *discordgo.Session) error {
 }
 
 // Load recursively loads plugins from the given directory.
-func Load(dir string) error {
+func Load(dir string, sess *discordgo.Session) error {
 	return filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -167,7 +167,7 @@ func Load(dir string) error {
 				return nil
 			}
 
-			_, err = callableInit(vm.ToValue(api), vm.ToValue(prev))
+			_, err = callableInit(vm.ToValue(api), vm.ToValue(prev), vm.ToValue(sess))
 			if err != nil {
 				return fmt.Errorf("%s init: %w", api.PluginInfo.Name, err)
 			}
