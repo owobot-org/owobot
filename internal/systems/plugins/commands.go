@@ -65,8 +65,12 @@ func enableCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			return fmt.Errorf("onEnable value is not callable")
 		}
 
-		_, err := callable(plugin.VM.ToValue(plugin.api), plugin.VM.ToValue(i.GuildID))
-		if err != nil {
+		errCh := make(chan error)
+		plugin.Loop.RunOnLoop(func(vm *goja.Runtime) {
+			_, err := callable(vm.ToValue(plugin.api), vm.ToValue(i.GuildID))
+			errCh <- err
+		})
+		if err := <-errCh; err != nil {
 			return fmt.Errorf("%s onEnable: %w", plugin.Info.Name, err)
 		}
 	}
@@ -95,11 +99,12 @@ func disableCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			return fmt.Errorf("onDisable value is not callable")
 		}
 
-		plugin.VM.Lock()
-		defer plugin.VM.Unlock()
-
-		_, err := callable(plugin.VM.ToValue(plugin.api), plugin.VM.ToValue(i.GuildID))
-		if err != nil {
+		errCh := make(chan error)
+		plugin.Loop.RunOnLoop(func(vm *goja.Runtime) {
+			_, err := callable(vm.ToValue(plugin.api), vm.ToValue(i.GuildID))
+			errCh <- err
+		})
+		if err := <-errCh; err != nil {
 			return fmt.Errorf("%s onDisable: %w", plugin.Info.Name, err)
 		}
 	}
@@ -219,15 +224,17 @@ func pluginRunCmd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			return fmt.Errorf("value in onExec is not callable")
 		}
 
-		plugin.VM.Lock()
-		_, err = callable(
-			plugin.VM.ToValue(cmd),
-			plugin.VM.ToValue(s),
-			plugin.VM.ToValue(i),
-			plugin.VM.ToValue(newArgs),
-		)
-		plugin.VM.Unlock()
-		return err
+		errCh := make(chan error)
+		plugin.Loop.RunOnLoop(func(vm *goja.Runtime) {
+			_, err = callable(
+				vm.ToValue(cmd),
+				vm.ToValue(s),
+				vm.ToValue(i),
+				vm.ToValue(newArgs),
+			)
+			errCh <- err
+		})
+		return <-errCh
 	}
 
 	return fmt.Errorf("command not found: %q", args[0])

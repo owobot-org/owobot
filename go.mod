@@ -6,6 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/dop251/goja v0.0.0-20231027120936-b396bb4c349d
+	github.com/dop251/goja_nodejs v0.0.0-20211022123610-8dd9abb0616d
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.0.6

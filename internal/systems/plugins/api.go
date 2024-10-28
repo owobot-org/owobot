@@ -5,6 +5,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dop251/goja"
+	"github.com/dop251/goja_nodejs/eventloop"
 	"go.elara.ws/logger/log"
 	"go.elara.ws/owobot/internal/db"
 	"go.elara.ws/owobot/internal/util"
@@ -22,7 +23,7 @@ var Plugins []Plugin
 type Plugin struct {
 	Info     db.PluginInfo
 	Commands []Command
-	VM       lockableRuntime
+	Loop     *eventloop.EventLoop
 	api      *owobotAPI
 }
 
@@ -52,7 +53,7 @@ type owobotAPI struct {
 	Commands   []Command
 
 	path string
-	vm   lockableRuntime
+	loop *eventloop.EventLoop
 }
 
 func (oa *owobotAPI) Enabled(guildID string) bool {
@@ -85,23 +86,22 @@ func (oa *owobotAPI) On(eventType string, fn goja.Value) {
 
 	handlersMtx.Lock()
 	defer handlersMtx.Unlock()
+	
+	oa.loop.RunOnLoop(func(vm *goja.Runtime) {
+		this := vm.ToValue(oa)
 
-	this := oa.vm.ToValue(oa)
-
-	handlerMap[eventType] = append(handlerMap[eventType], Handler{
-		PluginName: oa.PluginInfo.Name,
-		Func: func(s *discordgo.Session, data any) {
-			oa.vm.Lock()
-			defer oa.vm.Unlock()
-
-			_, err := callable(this, oa.vm.ToValue(s), oa.vm.ToValue(data))
-			if err != nil {
-				log.Error("Exception thrown in plugin function").
-					Str("plugin", oa.PluginInfo.Name).
-					Str("event-type", eventType).
-					Err(err).
-					Send()
-			}
-		},
+		handlerMap[eventType] = append(handlerMap[eventType], Handler{
+			PluginName: oa.PluginInfo.Name,
+			Func: func(s *discordgo.Session, data any) {
+				_, err := callable(this, vm.ToValue(s), vm.ToValue(data))
+				if err != nil {
+					log.Error("Exception thrown in plugin function").
+						Str("plugin", oa.PluginInfo.Name).
+						Str("event-type", eventType).
+						Err(err).
+						Send()
+				}
+			},
+		})
 	})
 }

@@ -6,10 +6,10 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dop251/goja"
+	"github.com/dop251/goja_nodejs/eventloop"
 	"go.elara.ws/logger/log"
 	"go.elara.ws/owobot/internal/db"
 	"go.elara.ws/owobot/internal/systems/commands"
@@ -117,22 +117,34 @@ func Load(dir string, sess *discordgo.Session) error {
 			return err
 		}
 
-		vm := lockableRuntime{&sync.Mutex{}, goja.New()}
-		vm.SetFieldNameMapper(lowerCamelNameMapper{})
+		loop := eventloop.NewEventLoop()
 
-		api := &owobotAPI{vm: vm, path: path}
+		loop.Run(func(vm *goja.Runtime) {
+			vm.SetFieldNameMapper(lowerCamelNameMapper{})
+		})
 
-		err = errors.Join(
-			vm.GlobalObject().Set("owobot", api),
-			vm.GlobalObject().Set("discord", builtins.Constants),
-			vm.GlobalObject().Set("print", fmt.Println),
-		)
+		api := &owobotAPI{loop: loop, path: path}
+
+		loop.Run(func(vm *goja.Runtime) {
+			err = errors.Join(
+				vm.GlobalObject().Set("owobot", api),
+				vm.GlobalObject().Set("discord", builtins.Constants),
+				vm.GlobalObject().Set("print", fmt.Println),
+			)
+
+		})
 		if err != nil {
 			return err
 		}
 
-		_, err = vm.RunScript(path, string(data))
-		if err != nil {
+		loop.Start()
+		errCh := make(chan error)
+
+		loop.RunOnLoop(func(vm *goja.Runtime) {
+			_, err := vm.RunScript(path, string(data))
+			errCh <- err
+		})
+		if err := <-errCh; err != nil {
 			return err
 		}
 
@@ -148,15 +160,18 @@ func Load(dir string, sess *discordgo.Session) error {
 			return err
 		}
 
-		err = builtins.Register(vm.Runtime, api.PluginInfo.Name, api.PluginInfo.Version)
-		if err != nil {
+		loop.RunOnLoop(func(vm *goja.Runtime) {
+			err := builtins.Register(vm, api.PluginInfo.Name, api.PluginInfo.Version)
+			errCh <- err
+		})
+		if err := <-errCh; err != nil {
 			return err
 		}
 
 		Plugins = append(Plugins, Plugin{
 			Info:     api.PluginInfo,
 			Commands: api.Commands,
-			VM:       vm,
+			Loop:     loop,
 			api:      api,
 		})
 
@@ -167,8 +182,11 @@ func Load(dir string, sess *discordgo.Session) error {
 				return nil
 			}
 
-			_, err = callableInit(vm.ToValue(api), vm.ToValue(prev), vm.ToValue(sess))
-			if err != nil {
+			loop.RunOnLoop(func(vm *goja.Runtime) {
+				_, err := callableInit(vm.ToValue(api), vm.ToValue(prev), vm.ToValue(sess))
+				errCh <- err
+			})
+			if err := <-errCh; err != nil {
 				return fmt.Errorf("%s init: %w", api.PluginInfo.Name, err)
 			}
 		}
