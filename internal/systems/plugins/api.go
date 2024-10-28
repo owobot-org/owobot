@@ -1,8 +1,6 @@
 package plugins
 
 import (
-	"sync"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/eventloop"
@@ -10,11 +8,6 @@ import (
 	"go.elara.ws/owobot/internal/db"
 	"go.elara.ws/owobot/internal/util"
 )
-
-type lockableRuntime struct {
-	*sync.Mutex
-	*goja.Runtime
-}
 
 // Plugins is a list of plugins
 var Plugins []Plugin
