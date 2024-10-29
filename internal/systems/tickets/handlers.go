@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"go.elara.ws/logger/log"
 	"github.com/bwmarrin/discordgo"
+	"go.elara.ws/logger/log"
 )
 
 // onMemberLeave closes any tickets a user had open when they leave

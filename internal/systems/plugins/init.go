@@ -131,7 +131,6 @@ func Load(dir string, sess *discordgo.Session) error {
 				vm.GlobalObject().Set("discord", builtins.Constants),
 				vm.GlobalObject().Set("print", fmt.Println),
 			)
-
 		})
 		if err != nil {
 			return err

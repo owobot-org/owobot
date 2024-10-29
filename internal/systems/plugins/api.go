@@ -79,7 +79,7 @@ func (oa *owobotAPI) On(eventType string, fn goja.Value) {
 
 	handlersMtx.Lock()
 	defer handlersMtx.Unlock()
-	
+
 	oa.loop.RunOnLoop(func(vm *goja.Runtime) {
 		this := vm.ToValue(oa)
 
