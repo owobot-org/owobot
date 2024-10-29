@@ -12,7 +12,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.6
 	github.com/pelletier/go-toml/v2 v2.1.0
 	github.com/rivo/uniseg v0.4.4
-	github.com/rqlite/sql v0.0.0-20240312185922-ffac88a740bd
+	github.com/rqlite/sql v0.0.0-20241029220113-152a320b02f7
 	github.com/valyala/fasttemplate v1.2.2
 	go.elara.ws/logger v0.0.0-20230928062203-85e135cf02ae
 	go.elara.ws/vercmp v0.0.0-20231003203944-671892886053
