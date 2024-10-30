@@ -26,7 +26,7 @@ func Modify(stmt, prefix, suffix string) (string, error) {
 	return sb.String(), nil
 }
 
-// modify changes all the table, viee, trigger, and index names in a single statement
+// modify changes all the table, view, trigger, and index names in a single statement
 func modify(stmt any, prefix, suffix string) {
 	switch stmt := stmt.(type) {
 	case *sqlparser.SelectStatement:
